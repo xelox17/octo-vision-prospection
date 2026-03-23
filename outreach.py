@@ -19,12 +19,23 @@ def generate_email(prospect):
         pain_points.append("une inactivité sur les réseaux sociaux qui fait perdre l'engagement de votre audience")
     if prospect["review_count"] < 50:
         pain_points.append("un faible nombre d'avis Google qui freine la confiance des nouveaux clients")
+    if not prospect.get("has_modern_menu"):
+        pain_points.append("un menu board absent ou peu attrayant qui freine les commandes et l'image de marque")
 
     pain_text = pain_points[0] if pain_points else "un potentiel digital encore inexploité"
 
     services_text = ", ".join(services[:3]) if services else "nos solutions digitales"
 
     subject = f"Boostez la visibilité de {name} en ligne — Opportunité exclusive"
+
+    # Design-specific angle if menu board is missing
+    design_line = ""
+    if not prospect.get("has_modern_menu"):
+        quality = prospect.get("menu_board_quality", "unknown")
+        if quality == "inexistant":
+            design_line = "\n💡 Nous créons également des menus board muraux modernes et des cartes visuelles qui multiplient les commandes spontanées.\n"
+        else:
+            design_line = "\n💡 Notre équipe de design peut moderniser votre menu board et votre identité visuelle pour attirer davantage de clients.\n"
 
     body = f"""Objet : {subject}
 
@@ -40,7 +51,7 @@ Chez Octo Vision, nous aidons les restaurants tunisiens à :
 ✅ Attirer plus de clients grâce à un positionnement Google optimisé
 ✅ Créer une image professionnelle et mémorable sur les réseaux sociaux
 ✅ Générer des réservations et commandes en ligne régulières
-
+✅ Designer des menus board modernes et une identité visuelle forte{design_line}
 Pour {name}, nous recommandons spécifiquement : **{services_text}**.
 
 Je vous propose un audit digital GRATUIT de 30 minutes pour vous montrer exactement ce que vous manquez et comment y remédier rapidement.
@@ -69,7 +80,9 @@ def generate_dm(prospect):
         platform = "Facebook"
 
     # Short, punchy DM
-    if not prospect["has_website"]:
+    if not prospect.get("has_modern_menu") and prospect.get("menu_board_quality") == "inexistant":
+        hook = f"J'ai remarqué que {name} n'a pas encore de menu board moderne — un visuel impactant peut doubler les commandes spontanées !"
+    elif not prospect["has_website"]:
         hook = f"J'ai remarqué que {name} n'a pas encore de site web — en 2024, c'est 30% de clients en moins !"
     elif prospect["last_post_days_ago"] > 60:
         hook = f"Votre dernière publication remonte à plus de {prospect['last_post_days_ago']} jours — vos concurrents en profitent !"

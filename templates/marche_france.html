@@ -18,7 +18,7 @@
 </div>
 
 <!-- Stats France -->
-<div class="stats-grid" style="grid-template-columns:repeat(6,1fr)">
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
   <div class="stat-card" style="border-top:3px solid #002395">
     <div class="stat-icon-wrap" style="--c:#002395">&#127919;</div>
     <div class="stat-body">
@@ -47,6 +47,8 @@
       <span class="stat-label">Sans menu digital</span>
     </div>
   </div>
+</div>
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-top:.75rem">
   <div class="stat-card" style="border-top:3px solid #f59e0b">
     <div class="stat-icon-wrap" style="--c:#f59e0b">&#127760;</div>
     <div class="stat-body">
@@ -59,6 +61,20 @@
     <div class="stat-body">
       <span class="stat-value" data-target="{{ stats.no_booking }}">{{ stats.no_booking }}</span>
       <span class="stat-label">Sans réservation</span>
+    </div>
+  </div>
+  <div class="stat-card" style="border-top:3px solid #ec4899">
+    <div class="stat-icon-wrap" style="--c:#ec4899">&#127912;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.no_modern_menu }}">{{ stats.no_modern_menu }}</span>
+      <span class="stat-label">Sans menu board</span>
+    </div>
+  </div>
+  <div class="stat-card" style="border-top:3px solid #06b6d4">
+    <div class="stat-icon-wrap" style="--c:#06b6d4">&#11088;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.no_pro_logo }}">{{ stats.no_pro_logo }}</span>
+      <span class="stat-label">Sans logo pro</span>
     </div>
   </div>
 </div>
@@ -78,6 +94,8 @@
     <div class="market-service-tag fr-tag-service">&#128197; Réservation en ligne</div>
     <div class="market-service-tag fr-tag-service">&#11088; Google My Business</div>
     <div class="market-service-tag fr-tag-service">&#128269; SEO Local</div>
+    <div class="market-service-tag" style="background:rgba(236,72,153,.15);color:#ec4899;border-color:rgba(236,72,153,.3)">&#127912; Design Menu Board</div>
+    <div class="market-service-tag" style="background:rgba(6,182,212,.15);color:#06b6d4;border-color:rgba(6,182,212,.3)">&#10024; Identité Visuelle & Logo</div>
   </div>
 </div>
 
@@ -125,6 +143,8 @@
           <th title="Menu digital / carte en ligne">Menu Digital</th>
           <th title="Réservation en ligne">Réservation</th>
           <th title="QR Code Menu">QR Code</th>
+          <th title="Menu board / carte visuelle moderne">Menu Board</th>
+          <th title="Logo professionnel">Logo</th>
           <th>Instagram</th>
           <th>Valeur €</th>
           <th>Statut</th>
@@ -185,6 +205,22 @@
             {% endif %}
           </td>
           <td>
+            {% if p.has_modern_menu %}
+              <span class="feature-tag feature-yes">&#10003; Oui</span>
+            {% elif p.menu_board_quality == 'mauvais' %}
+              <span class="feature-tag" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.3)">&#9888; Ancien</span>
+            {% else %}
+              <span class="feature-tag feature-no">&#10007; Absent</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if p.has_pro_logo %}
+              <span class="feature-tag feature-yes">&#10003; Oui</span>
+            {% else %}
+              <span class="feature-tag feature-no">&#10007; Non</span>
+            {% endif %}
+          </td>
+          <td>
             {% if p.has_instagram %}<span class="check yes">&#10003;</span> <span class="followers">{{ "{:,}".format(p.instagram_followers) }}</span>
             {% else %}<span class="check no">&#10007;</span>{% endif %}
           </td>
@@ -204,7 +240,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="12" class="empty-state"><div class="empty-icon">&#128269;</div><p>Aucun prospect trouvé</p></td></tr>
+        <tr><td colspan="14" class="empty-state"><div class="empty-icon">&#128269;</div><p>Aucun prospect trouvé</p></td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -241,6 +277,20 @@
       <div>
         <strong>Déjà équipé</strong>
         <p>Présence confirmée. Moindre opportunité sur ce service spécifique.</p>
+      </div>
+    </div>
+    <div class="fr-legend-item">
+      <span class="feature-tag feature-no" style="width:fit-content">&#10007; Absent</span>
+      <div>
+        <strong>Menu Board absent ou désuet</strong>
+        <p>Pas de menu mural moderne. Notre graphic designer crée des menus board impactants (style Tasty Crousty, ardoise digitale, affichage mural).</p>
+      </div>
+    </div>
+    <div class="fr-legend-item">
+      <span class="feature-tag feature-no" style="width:fit-content">&#10007; Non</span>
+      <div>
+        <strong>Logo non professionnel</strong>
+        <p>Identité visuelle absente ou amateure. Un logo fort ancre la marque et renforce la confiance.</p>
       </div>
     </div>
   </div>

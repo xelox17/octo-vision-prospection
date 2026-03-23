@@ -78,6 +78,28 @@ def build_vulnerabilities(p):
         vulnerabilities.append({"icon": "mail", "label": "Pas d'email professionnel",
             "detail": "Aucun email de contact trouvé.", "severity": "info"})
 
+    # Design graphique
+    if not p.get("has_modern_menu"):
+        quality = p.get("menu_board_quality", "unknown")
+        if quality == "inexistant":
+            vulnerabilities.append({"icon": "design", "label": "Aucun menu board / carte visuelle",
+                "detail": "Pas de menu mural ni de carte graphique professionnelle. Opportunité directe de vente design.",
+                "severity": "critical"})
+        else:
+            vulnerabilities.append({"icon": "design", "label": "Menu board / carte obsolète ou illisible",
+                "detail": "La carte actuelle est ancienne, peu lisible ou peu attrayante. Un menu board moderne multiplie les commandes.",
+                "severity": "warning"})
+
+    if not p.get("has_pro_logo"):
+        vulnerabilities.append({"icon": "logo", "label": "Identité visuelle inexistante ou amateure",
+            "detail": "Pas de logo professionnel détecté. L'image de marque est un levier de confiance et de fidélisation.",
+            "severity": "warning"})
+
+    if not p.get("has_gmaps_photos"):
+        vulnerabilities.append({"icon": "camera", "label": "Photos Google Maps insuffisantes ou absentes",
+            "detail": "Les visuels Google Maps sont anciens ou inexistants. Les clients décident en 3 secondes selon les photos.",
+            "severity": "warning"})
+
     return vulnerabilities
 
 
@@ -317,6 +339,10 @@ def marche_tunisie():
     in_pipeline = c.fetchone()[0]
     c.execute("SELECT COALESCE(SUM(estimated_value),0) FROM prospects WHERE country='TN' AND status='closed_won'")
     revenue = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='TN' AND has_modern_menu=0 AND status!='archived'")
+    no_modern_menu = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='TN' AND has_pro_logo=0 AND status!='archived'")
+    no_pro_logo = c.fetchone()[0]
 
     search   = request.args.get("search", "")
     status_f = request.args.get("status", "all")
@@ -342,7 +368,8 @@ def marche_tunisie():
     for p in prospects:
         p["score_label"], p["score_class"] = get_score_label(p["score"])
 
-    stats = {"total": total, "won": won, "in_pipeline": in_pipeline, "revenue": revenue}
+    stats = {"total": total, "won": won, "in_pipeline": in_pipeline, "revenue": revenue,
+             "no_modern_menu": no_modern_menu, "no_pro_logo": no_pro_logo}
     return render_template(
         "marche_tunisie.html",
         prospects=prospects, stats=stats,
@@ -372,6 +399,10 @@ def marche_france():
     no_website = c.fetchone()[0]
     c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND has_online_booking=0 AND status!='archived'")
     no_booking = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND has_modern_menu=0 AND status!='archived'")
+    no_modern_menu = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND has_pro_logo=0 AND status!='archived'")
+    no_pro_logo = c.fetchone()[0]
 
     search   = request.args.get("search", "")
     status_f = request.args.get("status", "all")
@@ -404,6 +435,7 @@ def marche_france():
     stats = {
         "total": total, "won": won, "in_pipeline": in_pipeline,
         "no_menu": no_menu, "no_website": no_website, "no_booking": no_booking,
+        "no_modern_menu": no_modern_menu, "no_pro_logo": no_pro_logo,
     }
     return render_template(
         "marche_france.html",

@@ -48,6 +48,22 @@
     </div>
   </div>
 </div>
+<div class="stats-grid" style="grid-template-columns:repeat(2,1fr);margin-top:.75rem">
+  <div class="stat-card" style="border-top:3px solid #ec4899">
+    <div class="stat-icon-wrap" style="--c:#ec4899">&#127912;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.no_modern_menu }}">{{ stats.no_modern_menu }}</span>
+      <span class="stat-label">Sans menu board moderne</span>
+    </div>
+  </div>
+  <div class="stat-card" style="border-top:3px solid #06b6d4">
+    <div class="stat-icon-wrap" style="--c:#06b6d4">&#10024;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.no_pro_logo }}">{{ stats.no_pro_logo }}</span>
+      <span class="stat-label">Sans logo professionnel</span>
+    </div>
+  </div>
+</div>
 
 <!-- Services pitch banner -->
 <div class="market-banner tn-banner">
@@ -57,9 +73,11 @@
     <div class="market-service-tag">&#128241; Réseaux Sociaux</div>
     <div class="market-service-tag">&#127912; Création de Contenu</div>
     <div class="market-service-tag">&#128176; Google Ads</div>
+    <div class="market-service-tag" style="background:rgba(236,72,153,.15);color:#ec4899;border-color:rgba(236,72,153,.3)">&#127912; Design Menu Board</div>
+    <div class="market-service-tag" style="background:rgba(6,182,212,.15);color:#06b6d4;border-color:rgba(6,182,212,.3)">&#10024; Identité Visuelle & Logo</div>
   </div>
   <div class="market-banner-text">
-    <strong>Stratégie Tunisie :</strong> Cibler les restaurants sans site web ni présence Instagram. ROI moyen : 2800 TND/mois par client.
+    <strong>Stratégie Tunisie :</strong> Cibler les restaurants sans site web ni présence Instagram. ROI moyen : 2800 TND/mois par client. Notre graphic designer crée des menus board modernes, logos et visuels Google Maps.
   </div>
 </div>
 
@@ -109,6 +127,8 @@
           <th>Site Web</th>
           <th>Instagram</th>
           <th>SEO</th>
+          <th title="Menu board / carte visuelle moderne">Menu Board</th>
+          <th title="Logo professionnel">Logo</th>
           <th>Valeur TND</th>
           <th>Statut</th>
           <th style="text-align:right">Actions</th>
@@ -152,6 +172,22 @@
               {{ p.seo_score }}
             </span>
           </td>
+          <td>
+            {% if p.has_modern_menu %}
+              <span class="feature-tag feature-yes">&#10003; Oui</span>
+            {% elif p.menu_board_quality == 'mauvais' %}
+              <span class="feature-tag" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.3)">&#9888; Ancien</span>
+            {% else %}
+              <span class="feature-tag feature-no">&#10007; Absent</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if p.has_pro_logo %}
+              <span class="feature-tag feature-yes">&#10003; Oui</span>
+            {% else %}
+              <span class="feature-tag feature-no">&#10007; Non</span>
+            {% endif %}
+          </td>
           <td><span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }}</span></td>
           <td>
             <span class="status-badge status-{{ p.status }}">
@@ -168,7 +204,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="11" class="empty-state"><div class="empty-icon">&#128269;</div><p>Aucun prospect trouvé</p></td></tr>
+        <tr><td colspan="13" class="empty-state"><div class="empty-icon">&#128269;</div><p>Aucun prospect trouvé</p></td></tr>
         {% endfor %}
       </tbody>
     </table>

@@ -51,11 +51,15 @@ def init_db():
         ("estimated_value",    "INTEGER DEFAULT 0"),
         ("next_follow_up",     "TEXT DEFAULT ''"),
         ("last_contact_date",  "TEXT DEFAULT ''"),
-        ("country",            "TEXT DEFAULT 'TN'"),
-        ("has_digital_menu",   "INTEGER DEFAULT 0"),
-        ("has_online_booking", "INTEGER DEFAULT 0"),
-        ("has_qr_menu",        "INTEGER DEFAULT 0"),
-        ("city",               "TEXT DEFAULT ''"),
+        ("country",              "TEXT DEFAULT 'TN'"),
+        ("has_digital_menu",     "INTEGER DEFAULT 0"),
+        ("has_online_booking",   "INTEGER DEFAULT 0"),
+        ("has_qr_menu",          "INTEGER DEFAULT 0"),
+        ("city",                 "TEXT DEFAULT ''"),
+        ("has_modern_menu",      "INTEGER DEFAULT 0"),
+        ("has_pro_logo",         "INTEGER DEFAULT 0"),
+        ("has_gmaps_photos",     "INTEGER DEFAULT 0"),
+        ("menu_board_quality",   "TEXT DEFAULT 'unknown'"),
     ]
     for col_name, col_def in migrations:
         try:
@@ -356,44 +360,55 @@ def compute_score_and_services(p):
     score = 0
     services = []
 
-    if not p["has_website"]:
-        score += 30
+    if not p.get("has_website"):
+        score += 25
         services.append("Création de Site Web")
 
-    if p["seo_score"] < 30:
-        score += 20
+    if p.get("seo_score", 0) < 30:
+        score += 15
         services.append("Référencement SEO")
-    elif p["seo_score"] < 50:
-        score += 10
+    elif p.get("seo_score", 0) < 50:
+        score += 8
         services.append("Référencement SEO")
 
-    if not p["has_instagram"]:
-        score += 20
+    if not p.get("has_instagram"):
+        score += 15
         services.append("Gestion des Réseaux Sociaux")
-    elif p["instagram_followers"] < 1000:
-        score += 10
+    elif p.get("instagram_followers", 0) < 1000:
+        score += 8
         if "Gestion des Réseaux Sociaux" not in services:
             services.append("Gestion des Réseaux Sociaux")
 
-    if p["last_post_days_ago"] > 60:
-        score += 15
+    if p.get("last_post_days_ago", 999) > 60:
+        score += 10
         if "Création de Contenu" not in services:
             services.append("Création de Contenu")
-    elif p["last_post_days_ago"] > 30:
-        score += 8
+    elif p.get("last_post_days_ago", 999) > 30:
+        score += 5
         if "Création de Contenu" not in services:
             services.append("Création de Contenu")
 
-    if p["review_count"] < 50:
-        score += 10
+    if p.get("review_count", 0) < 50:
+        score += 8
         services.append("Publicité Payante (Google Ads)")
-    elif p["google_rating"] < 4.0:
+    elif p.get("google_rating", 5) < 4.0:
         score += 5
         services.append("Gestion de Réputation")
 
-    if not p["has_facebook"] and "Gestion des Réseaux Sociaux" not in services:
-        score += 5
+    if not p.get("has_facebook") and "Gestion des Réseaux Sociaux" not in services:
+        score += 4
         services.append("Gestion des Réseaux Sociaux")
+
+    # Design graphique
+    if not p.get("has_modern_menu"):
+        score += 12
+        services.append("Design Menu & Carte")
+    if not p.get("has_pro_logo"):
+        score += 8
+        services.append("Identité Visuelle & Logo")
+    if not p.get("has_gmaps_photos"):
+        score += 8
+        services.append("Photos & Visuels Google Maps")
 
     return min(score, 100), list(dict.fromkeys(services))
 
@@ -434,6 +449,20 @@ def compute_france_score_and_services(p):
     if p.get("seo_score", 0) < 30:
         score += 5
         services.append("Référencement SEO Local")
+
+    # Design graphique — aussi important en France
+    if not p.get("has_modern_menu"):
+        score += 10
+        services.append("Design Menu Board & Carte")
+    if not p.get("has_pro_logo"):
+        score += 5
+        services.append("Identité Visuelle & Logo")
+    if not p.get("has_gmaps_photos"):
+        score += 5
+        services.append("Photos & Visuels Google Maps")
+    if p.get("menu_board_quality") in ("mauvais", "inexistant", "unknown"):
+        if "Design Menu Board & Carte" not in services:
+            services.append("Design Menu Board & Carte")
 
     return min(score, 100), list(dict.fromkeys(services))
 
@@ -698,10 +727,63 @@ def seed_db():
     conn = get_db()
     c = conn.cursor()
 
+    # Design fields mock values — assigned based on existing data quality signals
+    DESIGN_MOCK = {
+        # TN prospects — most lack modern menus and pro logos
+        "Restaurant Le Carthage":        {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Dar El Jeld":                   {"has_modern_menu": 1, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "bon"},
+        "Pizza Napoli Tunis":            {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Café Saf Saf":                  {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Sushi Zen Carthage":            {"has_modern_menu": 1, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "bon"},
+        "Snack Brik & More":             {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Le Gourmet Tunis":              {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Café Maure Ennejma Ezzahra":    {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Burger House Tunis":            {"has_modern_menu": 1, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Restaurant El Foundouk":        {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Patisserie Masmoudi":           {"has_modern_menu": 1, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "bon"},
+        "Taco Loco Tunis":               {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Chez Slama":                    {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Cloud Kitchen Délices":         {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Le Pêcheur Gourmet":            {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Healthy Bowl Tunis":            {"has_modern_menu": 1, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "bon"},
+        "Brasserie 1956":                {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 0, "menu_board_quality": "mauvais"},
+        "Crêperie de Carthage":          {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Kebab Palace":                  {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Traiteur El Hana":              {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        # FR prospects
+        "Le Bistrot du Marché":          {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Chez Michel":                   {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "La Table de Provence":          {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Brasserie des Capucins":        {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Le Comptoir Niçois":            {"has_modern_menu": 1, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "bon"},
+        "Pizzeria Napolitana":           {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Au Crocodile":                  {"has_modern_menu": 1, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "bon"},
+        "La Crêperie Bretonne":          {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "L'Estaminet du Vieux-Lille":    {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 0, "menu_board_quality": "mauvais"},
+        "Sushi Fusion Montpellier":      {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Le Petit Rennes":               {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Brasserie Georges":             {"has_modern_menu": 1, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "bon"},
+        "Le Jardin d'en Face":           {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "La Pataterie Grenoble":         {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 0, "menu_board_quality": "mauvais"},
+        "Le Pub Saint-Germain":          {"has_modern_menu": 0, "has_pro_logo": 1, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Trattoria Roma":                {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 1, "menu_board_quality": "mauvais"},
+        "Le Relais de Bourgogne":        {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+        "Kebab & Grill du Centre":       {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "inexistant"},
+    }
+
+    # Build normalized lookup for accented characters
+    _design_norm = {k.lower(): v for k, v in DESIGN_MOCK.items()}
+
+    def _get_design(name):
+        return _design_norm.get(name.lower(),
+               {"has_modern_menu": 0, "has_pro_logo": 0, "has_gmaps_photos": 0, "menu_board_quality": "unknown"})
+
     c.execute("SELECT COUNT(*) FROM prospects WHERE country = 'TN'")
     if c.fetchone()[0] == 0:
         for p in MOCK_PROSPECTS:
-            score, services = compute_score_and_services(p)
+            d = _get_design(p["name"])
+            p_full = {**p, **d}
+            score, services = compute_score_and_services(p_full)
             c.execute("""
                 INSERT INTO prospects (
                     name, category, address, phone, email,
@@ -709,8 +791,9 @@ def seed_db():
                     has_instagram, instagram_handle, instagram_followers,
                     has_facebook, last_post_days_ago, seo_score,
                     status, score, services_needed, priority, estimated_value,
-                    country, city
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    country, city,
+                    has_modern_menu, has_pro_logo, has_gmaps_photos, menu_board_quality
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 p["name"], p["category"], p["address"], p["phone"], p["email"],
                 p["google_rating"], p["review_count"], p["has_website"], p.get("website_url"),
@@ -718,14 +801,17 @@ def seed_db():
                 p["has_facebook"], p["last_post_days_ago"], p["seo_score"],
                 "new", score, json.dumps(services),
                 p.get("priority", "medium"), p.get("estimated_value", 0),
-                "TN", p.get("city", "Tunis")
+                "TN", p.get("city", "Tunis"),
+                d["has_modern_menu"], d["has_pro_logo"], d["has_gmaps_photos"], d["menu_board_quality"]
             ))
         print(f"[DB] Seeded {len(MOCK_PROSPECTS)} Tunisian prospects.")
 
     c.execute("SELECT COUNT(*) FROM prospects WHERE country = 'FR'")
     if c.fetchone()[0] == 0:
         for p in MOCK_FRANCE:
-            score, services = compute_france_score_and_services(p)
+            d = _get_design(p["name"])
+            p_full = {**p, **d}
+            score, services = compute_france_score_and_services(p_full)
             c.execute("""
                 INSERT INTO prospects (
                     name, category, address, phone, email,
@@ -733,8 +819,9 @@ def seed_db():
                     has_instagram, instagram_handle, instagram_followers,
                     has_facebook, last_post_days_ago, seo_score,
                     status, score, services_needed, priority, estimated_value,
-                    country, city, has_digital_menu, has_online_booking, has_qr_menu
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    country, city, has_digital_menu, has_online_booking, has_qr_menu,
+                    has_modern_menu, has_pro_logo, has_gmaps_photos, menu_board_quality
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 p["name"], p["category"], p["address"], p["phone"], p["email"],
                 p["google_rating"], p["review_count"], p["has_website"], p.get("website_url"),
@@ -743,7 +830,8 @@ def seed_db():
                 "new", score, json.dumps(services),
                 p.get("priority", "medium"), p.get("estimated_value", 0),
                 "FR", p.get("city", ""),
-                p.get("has_digital_menu", 0), p.get("has_online_booking", 0), p.get("has_qr_menu", 0)
+                p.get("has_digital_menu", 0), p.get("has_online_booking", 0), p.get("has_qr_menu", 0),
+                d["has_modern_menu"], d["has_pro_logo"], d["has_gmaps_photos"], d["menu_board_quality"]
             ))
         print(f"[DB] Seeded {len(MOCK_FRANCE)} French prospects.")
 
