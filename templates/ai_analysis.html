@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Analyse IA — {{ prospect.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <a href="/prospect/{{ prospect.id }}" class="back-btn">&#8592; {{ prospect.name }}</a>
+    <div>
+      <h1 class="page-title">&#10024; Analyse IA</h1>
+      <p class="page-sub">Profil complet + recommandations pour {{ prospect.name }}</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="/prospect/{{ prospect.id }}/outreach" class="btn btn-secondary">&#9993; Messages</a>
+    <button id="analyzeBtn" onclick="triggerAnalysis({{ prospect.id }})" class="btn btn-ai">
+      &#10024; Lancer l'analyse
+    </button>
+  </div>
+</div>
+
+<!-- Profile summary -->
+<div class="ai-banner" style="margin-bottom:1.5rem">
+  <div class="ai-banner-icon">&#10024;</div>
+  <div class="ai-banner-body">
+    <strong>{{ prospect.name }} — Score de besoin : {{ prospect.score }}/100</strong>
+    <p>{{ prospect.services_needed|length }} service(s) identifié(s) · {{ vulnerabilities|length }} gap(s) détecté(s) · Valeur estimée : {{ "{:,}".format(prospect.estimated_value or 0) }} TND/mois</p>
+  </div>
+</div>
+
+<!-- AI Result area -->
+<div id="aiResultArea">
+  <div class="ai-idle-state card">
+    <div class="ai-idle-icon">&#10024;</div>
+    <h3>Prêt à analyser</h3>
+    <p class="muted" style="margin:.75rem 0">Cliquez sur "Lancer l'analyse" pour générer une analyse IA complète de ce prospect.</p>
+    <button onclick="triggerAnalysis({{ prospect.id }})" class="btn btn-ai" style="margin:0 auto">
+      &#10024; Lancer l'analyse IA
+    </button>
+  </div>
+</div>
+
+<!-- Always visible: Gaps + Services -->
+<div class="two-col-grid" style="margin-top:1.5rem">
+  <div class="card">
+    <div class="card-section-title">Gaps détectés (données en temps réel)</div>
+    {% if vulnerabilities %}
+    <div class="vuln-list">
+      {% for v in vulnerabilities %}
+      <div class="vuln-item vuln-{{ v.severity }}">
+        <div class="vuln-header">
+          <span class="vuln-label">{{ v.label }}</span>
+          <span class="vuln-badge vuln-badge-{{ v.severity }}">
+            {{ {'critical':'Critique','warning':'À améliorer','info':'Info'}.get(v.severity,'') }}
+          </span>
+        </div>
+        <p class="vuln-detail">{{ v.detail }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      <div class="empty-small">Aucun gap critique</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-section-title">Services recommandés</div>
+    {% set icons = {'Création de Site Web':'&#127760;','Référencement SEO':'&#128269;','Gestion des Réseaux Sociaux':'&#128241;','Création de Contenu':'&#127912;','Publicité Payante (Google Ads)':'&#128176;','Gestion de Réputation':'&#11088;'} %}
+    <div class="services-list">
+      {% for s in prospect.services_needed %}
+      <div class="service-item">
+        <span class="service-icon">{{ icons.get(s,'&#10003;')|safe }}</span>
+        <div>
+          <div class="service-name">{{ s }}</div>
+          <div class="service-sub">Identifié par analyse automatique</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function triggerAnalysis(id) {
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.innerHTML = '&#10024; Analyse en cours...';
+
+  document.getElementById('aiResultArea').innerHTML = `
+    <div class="card">
+      <div class="ai-loading">
+        <div class="ai-spinner"></div>
+        <p style="margin-top:1rem">Claude analyse le profil digital...</p>
+        <div class="ai-steps" id="aiSteps">
+          <div class="ai-step">&#10003; Chargement des données du prospect...</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Simulate progressive steps
+  const steps = [
+    "Analyse de la présence web...",
+    "Évaluation du SEO et référencement...",
+    "Analyse des réseaux sociaux...",
+    "Calcul de la probabilité de conversion...",
+    "Génération des recommandations...",
+  ];
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      const stepsEl = document.getElementById('aiSteps');
+      if(stepsEl) stepsEl.innerHTML += `<div class="ai-step">&#10003; ${s}</div>`;
+    }, (i + 1) * 600);
+  });
+
+  setTimeout(() => {
+    fetch(`/api/ai/analyze/${id}`)
+      .then(r => r.json())
+      .then(data => {
+        renderFullAnalysis(data);
+        btn.disabled = false;
+        btn.innerHTML = '&#10024; Relancer';
+      });
+  }, steps.length * 600 + 400);
+}
+
+function renderFullAnalysis(d) {
+  const probColor = d.conversion_probability >= 60 ? '#10b981' : d.conversion_probability >= 35 ? '#f59e0b' : '#ef4444';
+  document.getElementById('aiResultArea').innerHTML = `
+    <div class="ai-full-result">
+      <div class="ai-result-header">
+        <div class="ai-result-prob-big" style="color:${probColor}">${d.conversion_probability}%</div>
+        <div class="ai-result-header-body">
+          <div class="ai-result-title">Probabilité de conversion estimée</div>
+          <div class="ai-result-meta-grid">
+            <div class="ai-meta-item"><span>Canal optimal</span><strong>${d.best_channel}</strong></div>
+            <div class="ai-meta-item"><span>Meilleur timing</span><strong>${d.best_time}</strong></div>
+            <div class="ai-meta-item"><span>Valeur deal</span><strong>${d.estimated_deal_value.toLocaleString()} TND/mois</strong></div>
+            <div class="ai-meta-item"><span>Focus pitch</span><strong>${d.pitch_focus}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-insights-grid">
+        <div class="ai-insight-box">
+          <div class="ai-insight-label">&#128161; Insight clé</div>
+          <p>${d.key_insight}</p>
+        </div>
+        <div class="ai-insight-box">
+          <div class="ai-insight-label">&#127919; Approche recommandée</div>
+          <p>${d.recommended_approach}</p>
+        </div>
+        <div class="ai-insight-box">
+          <div class="ai-insight-label">&#128200; Analyse concurrentielle</div>
+          <p>${d.competitor_analysis}</p>
+        </div>
+        <div class="ai-insight-box">
+          <div class="ai-insight-label">&#128176; ROI attendu pour le client</div>
+          <p>${d.expected_roi}</p>
+        </div>
+      </div>
+
+      <div class="ai-actions-row">
+        <a href="/prospect/${d.pid || ''}/outreach" class="btn btn-primary">&#9993; Utiliser ce pitch</a>
+        <a href="/prospect/${d.pid || ''}/activity" class="btn btn-secondary">&#128196; Logger une interaction</a>
+      </div>
+
+      <div class="ai-model-note">
+        <span>&#10024; ${d.model}</span>
+        <span>Généré le ${new Date(d.generated_at).toLocaleString('fr-FR')}</span>
+      </div>
+    </div>`;
+}
+</script>
+{% endblock %}

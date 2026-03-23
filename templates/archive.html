@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Archive — Octo Vision{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Archive</h1>
+    <p class="page-sub">Prospects archivés — {{ total }} au total</p>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+  <form method="get" style="display:contents">
+    <input type="text" name="search" placeholder="Rechercher dans l'archive..."
+      value="{{ search }}" class="search-input" oninput="this.form.submit()" />
+  </form>
+  <span class="results-count">{{ archived|length }} résultat(s)</span>
+</div>
+
+{% if archived %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Prospects archivés</h2>
+    <span class="card-badge">{{ archived|length }}</span>
+  </div>
+  <div class="table-wrapper">
+    <table class="prospects-table">
+      <thead>
+        <tr>
+          <th>Établissement</th>
+          <th>Catégorie</th>
+          <th>Score</th>
+          <th>Valeur est.</th>
+          <th>Services</th>
+          <th>Archivé le</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in archived %}
+        <tr>
+          <td>
+            <div class="prospect-name-cell">
+              <span class="prospect-name">{{ p.name }}</span>
+              <span class="prospect-address">{{ p.address }}</span>
+            </div>
+          </td>
+          <td><span class="category-badge">{{ p.category }}</span></td>
+          <td>
+            <div class="score-cell">
+              <div class="score-bar-wrap">
+                <div class="score-bar score-{{ p.score_class }}" style="width:{{ p.score }}%"></div>
+              </div>
+              <span class="score-num score-{{ p.score_class }}">{{ p.score }}</span>
+            </div>
+          </td>
+          <td><span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} TND</span></td>
+          <td>
+            {% for s in p.services_needed[:2] %}
+              <span class="category-badge" style="margin-bottom:.2rem">{{ s }}</span>
+            {% endfor %}
+            {% if p.services_needed|length > 2 %}
+              <span class="category-badge">+{{ p.services_needed|length - 2 }}</span>
+            {% endif %}
+          </td>
+          <td><span class="muted">{{ p.created_at[:10] }}</span></td>
+          <td>
+            <div class="action-group" style="justify-content:flex-end">
+              <a href="/prospect/{{ p.id }}" class="action-btn" title="Voir le profil">&#128065;</a>
+              <button onclick="restoreProspect({{ p.id }}, this)" class="action-btn action-btn-green" title="Restaurer">
+                &#8617;
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state" style="padding:4rem">
+    <div class="empty-icon">&#9783;</div>
+    <p style="font-size:1.1rem;font-weight:600;margin-bottom:.5rem">Aucun prospect archivé</p>
+    <p class="muted">Les prospects archivés depuis le dashboard ou le pipeline apparaîtront ici.</p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary" style="margin-top:1.5rem">
+      &#8592; Retour au dashboard
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function restoreProspect(id, btn) {
+  if(!confirm('Restaurer ce prospect dans le pipeline ?')) return;
+  fetch(`/api/prospect/${id}/restore`, {method:'POST'})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){ showToast('Restauré avec succès !'); btn.closest('tr').remove(); }
+    });
+}
+</script>
+{% endblock %}

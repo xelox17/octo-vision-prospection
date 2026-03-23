@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Octo Vision{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Tableau de bord</h1>
+    <p class="page-sub">Restaurants & Food Businesses — Tunis, Tunisie</p>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('ai_insights') }}" class="btn btn-ai">
+      <span>&#10024;</span> Analyse IA
+    </a>
+    <span class="badge-mock">Données mock</span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#6366f1">&#127919;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.total }}">{{ stats.total }}</span>
+      <span class="stat-label">Prospects actifs</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#f59e0b">&#128293;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.in_pipeline }}">{{ stats.in_pipeline }}</span>
+      <span class="stat-label">En pipeline</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#10b981">&#10003;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.won }}">{{ stats.won }}</span>
+      <span class="stat-label">Clients gagnés</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#8b5cf6">&#8383;</div>
+    <div class="stat-body">
+      <span class="stat-value">{{ "{:,}".format(stats.revenue) }}</span>
+      <span class="stat-label">Revenus TND</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#ef4444">&#9888;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.overdue }}">{{ stats.overdue }}</span>
+      <span class="stat-label">Relances dues</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#6b7280">&#9783;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.archived }}">{{ stats.archived }}</span>
+      <span class="stat-label">Archivés</span>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+  <form method="get" action="{{ url_for('dashboard') }}" id="filterForm" style="display:contents">
+    <input type="text" name="search" placeholder="Rechercher un restaurant..." value="{{ search }}"
+      class="search-input" oninput="debounceSubmit()" id="searchInput" />
+
+    <select name="status" class="filter-select" onchange="this.form.submit()">
+      <option value="all" {% if current_status=='all' %}selected{% endif %}>Tous les statuts</option>
+      {% for key, label, color in pipeline_stages %}
+      <option value="{{ key }}" {% if current_status==key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="priority" class="filter-select" onchange="this.form.submit()">
+      <option value="all" {% if current_priority=='all' %}selected{% endif %}>Toutes priorités</option>
+      <option value="urgent" {% if current_priority=='urgent' %}selected{% endif %}>🔴 Urgent</option>
+      <option value="high"   {% if current_priority=='high'   %}selected{% endif %}>🟠 Élevée</option>
+      <option value="medium" {% if current_priority=='medium' %}selected{% endif %}>🔵 Normale</option>
+      <option value="low"    {% if current_priority=='low'    %}selected{% endif %}>⚫ Faible</option>
+    </select>
+
+    <select name="sort" class="filter-select" onchange="this.form.submit()">
+      <option value="score" {% if current_sort=='score' %}selected{% endif %}>Trier: Score</option>
+      <option value="rating" {% if current_sort=='rating' %}selected{% endif %}>Trier: Note Google</option>
+      <option value="value" {% if current_sort=='value' %}selected{% endif %}>Trier: Valeur</option>
+      <option value="name" {% if current_sort=='name' %}selected{% endif %}>Trier: Nom</option>
+    </select>
+  </form>
+  <span class="results-count">{{ prospects|length }} résultat(s)</span>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Liste des Prospects</h2>
+    <span class="card-badge">{{ prospects|length }} établissements</span>
+  </div>
+  <div class="table-wrapper">
+    <table class="prospects-table">
+      <thead>
+        <tr>
+          <th>Établissement</th>
+          <th>Catégorie</th>
+          <th>Priorité</th>
+          <th>Score</th>
+          <th>Google</th>
+          <th>Web</th>
+          <th>Instagram</th>
+          <th>SEO</th>
+          <th>Valeur</th>
+          <th>Statut</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in prospects %}
+        <tr class="prospect-row" onclick="window.location='/prospect/{{ p.id }}'">
+          <td>
+            <div class="prospect-name-cell">
+              <span class="prospect-name">{{ p.name }}</span>
+              <span class="prospect-address">{{ p.address }}</span>
+              {% if p.next_follow_up %}
+                <span class="follow-up-badge {% if p.next_follow_up <= today %}overdue{% endif %}">
+                  &#128336; {{ p.next_follow_up }}
+                </span>
+              {% endif %}
+            </div>
+          </td>
+          <td><span class="category-badge">{{ p.category }}</span></td>
+          <td>
+            <span class="priority-dot priority-{{ p.priority or 'medium' }}"
+              title="{{ {'urgent':'Urgent','high':'Élevée','medium':'Normale','low':'Faible'}.get(p.priority,'Normale') }}">
+            </span>
+          </td>
+          <td>
+            <div class="score-cell">
+              <div class="score-bar-wrap">
+                <div class="score-bar score-{{ p.score_class }}" style="width:{{ p.score }}%"></div>
+              </div>
+              <span class="score-num score-{{ p.score_class }}">{{ p.score }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="google-cell">
+              <span class="star">&#9733;</span> {{ p.google_rating }}
+              <span class="review-count">({{ p.review_count }})</span>
+            </div>
+          </td>
+          <td>
+            {% if p.has_website %}<span class="check yes">&#10003;</span>
+            {% else %}<span class="check no">&#10007;</span>{% endif %}
+          </td>
+          <td>
+            {% if p.has_instagram %}
+              <span class="check yes">&#10003;</span>
+              <span class="followers">{{ "{:,}".format(p.instagram_followers) }}</span>
+            {% else %}
+              <span class="check no">&#10007;</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="seo-pill {% if p.seo_score >= 50 %}seo-good{% elif p.seo_score >= 25 %}seo-med{% else %}seo-bad{% endif %}">
+              {{ p.seo_score }}
+            </span>
+          </td>
+          <td>
+            <span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} TND</span>
+          </td>
+          <td>
+            <span class="status-badge status-{{ p.status }}">
+              {% for key, label, color in pipeline_stages %}{% if key==p.status %}{{ label }}{% endif %}{% endfor %}
+            </span>
+          </td>
+          <td onclick="event.stopPropagation()">
+            <div class="action-group">
+              <a href="/prospect/{{ p.id }}" class="action-btn" title="Voir le profil">
+                &#128065;
+              </a>
+              <a href="/prospect/{{ p.id }}/activity" class="action-btn" title="Activité">
+                &#128196;
+              </a>
+              <a href="/prospect/{{ p.id }}/outreach" class="action-btn action-btn-green" title="Message">
+                &#9993;
+              </a>
+              <a href="/prospect/{{ p.id }}/ai-analysis" class="action-btn action-btn-ai" title="Analyse IA">
+                &#10024;
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="11" class="empty-state">
+            <div class="empty-icon">&#128269;</div>
+            <p>Aucun prospect trouvé</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend-bar">
+  <div class="legend-item"><div class="legend-dot score-hot"></div> Très chaud (70-100)</div>
+  <div class="legend-item"><div class="legend-dot score-warm"></div> Chaud (45-69)</div>
+  <div class="legend-item"><div class="legend-dot score-lukewarm"></div> Tiède (20-44)</div>
+  <div class="legend-item"><div class="legend-dot score-cold"></div> Froid (0-19)</div>
+  <div class="legend-sep"></div>
+  <div class="legend-item"><div class="priority-dot priority-urgent"></div> Urgent</div>
+  <div class="legend-item"><div class="priority-dot priority-high"></div> Élevée</div>
+  <div class="legend-item"><div class="priority-dot priority-medium"></div> Normale</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const today = "{{ today }}";
+let searchTimer;
+function debounceSubmit() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
+}
+</script>
+{% endblock %}

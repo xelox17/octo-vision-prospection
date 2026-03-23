@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}{{ prospect.name }} — Octo Vision{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <a href="{{ url_for('dashboard') }}" class="back-btn">&#8592; Retour</a>
+    <div>
+      <div class="page-title-row">
+        <h1 class="page-title">{{ prospect.name }}</h1>
+        <span class="priority-badge priority-bg-{{ prospect.priority or 'medium' }}">
+          {{ {'urgent':'🔴 Urgent','high':'🟠 Élevée','medium':'🔵 Normale','low':'⚫ Faible'}.get(prospect.priority,'Normale') }}
+        </span>
+        <span class="status-badge status-{{ prospect.status }}">
+          {% for key, label, color in pipeline_stages %}{% if key==prospect.status %}{{ label }}{% endif %}{% endfor %}
+        </span>
+      </div>
+      <p class="page-sub">{{ prospect.category }} — {{ prospect.address }}</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="/prospect/{{ prospect.id }}/activity" class="btn btn-secondary">
+      &#128196; Activité ({{ interaction_count }})
+    </a>
+    <a href="/prospect/{{ prospect.id }}/outreach" class="btn btn-secondary">
+      &#9993; Messages
+    </a>
+    <a href="/prospect/{{ prospect.id }}/ai-analysis" class="btn btn-ai">
+      &#10024; Analyse IA
+    </a>
+  </div>
+</div>
+
+<!-- Top row: Score + Infos -->
+<div class="detail-top-grid">
+
+  <div class="card score-card">
+    <div class="score-big score-{{ prospect.score_class }}">{{ prospect.score }}</div>
+    <div class="score-label-big">Score de besoin</div>
+    <div class="score-tag score-tag-{{ prospect.score_class }}">{{ prospect.score_label }}</div>
+    <div class="score-ring-wrap">
+      <svg viewBox="0 0 80 80" class="score-ring">
+        <circle cx="40" cy="40" r="32" fill="none" stroke="var(--border)" stroke-width="6"/>
+        <circle cx="40" cy="40" r="32" fill="none"
+          class="score-ring-arc score-ring-{{ prospect.score_class }}"
+          stroke-width="6" stroke-linecap="round"
+          stroke-dasharray="{{ (prospect.score / 100 * 201.06)|round(1) }} 201.06"
+          transform="rotate(-90 40 40)"/>
+      </svg>
+    </div>
+    <div class="score-hint">{{ prospect.services_needed|length }} service(s) recommandé(s)</div>
+  </div>
+
+  <div class="card">
+    <div class="card-section-title">Informations de contact</div>
+    <div class="info-grid">
+      <div class="info-row">
+        <span class="info-label">Téléphone</span>
+        <span class="info-val">
+          {% if prospect.phone %}
+            <a href="tel:{{ prospect.phone }}" class="link-tel">{{ prospect.phone }}</a>
+          {% else %}<span class="muted">Non disponible</span>{% endif %}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email</span>
+        <span class="info-val">
+          {% if prospect.email %}
+            <a href="mailto:{{ prospect.email }}" class="link-email">{{ prospect.email }}</a>
+          {% else %}<span class="muted">Non disponible</span>{% endif %}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Site Web</span>
+        <span class="info-val">
+          {% if prospect.has_website %}
+            <a href="http://{{ prospect.website_url }}" target="_blank" class="link">{{ prospect.website_url }}</a>
+          {% else %}<span class="tag-no">&#10007; Absent</span>{% endif %}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Instagram</span>
+        <span class="info-val">
+          {% if prospect.has_instagram %}
+            <span>{{ prospect.instagram_handle }} — {{ "{:,}".format(prospect.instagram_followers) }} abonnés</span>
+          {% else %}<span class="tag-no">&#10007; Absent</span>{% endif %}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Note Google</span>
+        <span class="info-val">&#9733; {{ prospect.google_rating }}/5 · {{ prospect.review_count }} avis</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Dernière publication</span>
+        <span class="info-val">
+          {% if prospect.last_post_days_ago >= 999 %}
+            <span class="muted">Aucune trouvée</span>
+          {% else %}Il y a {{ prospect.last_post_days_ago }} jours{% endif %}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">SEO Score</span>
+        <span class="info-val">
+          <span class="seo-pill {% if prospect.seo_score >= 50 %}seo-good{% elif prospect.seo_score >= 25 %}seo-med{% else %}seo-bad{% endif %}">
+            {{ prospect.seo_score }}/100
+          </span>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Valeur estimée</span>
+        <span class="info-val value-cell">{{ "{:,}".format(prospect.estimated_value or 0) }} TND/mois</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Vulnerabilities + Services -->
+<div class="two-col-grid">
+  <div class="card">
+    <div class="card-section-title">&#128269; Gaps & Opportunités détectés</div>
+    {% if vulnerabilities %}
+    <div class="vuln-list">
+      {% for v in vulnerabilities %}
+      <div class="vuln-item vuln-{{ v.severity }}">
+        <div class="vuln-header">
+          <span class="vuln-label">{{ v.label }}</span>
+          <span class="vuln-badge vuln-badge-{{ v.severity }}">
+            {{ {'critical':'Critique','warning':'À améliorer','info':'Info'}.get(v.severity,'Info') }}
+          </span>
+        </div>
+        <p class="vuln-detail">{{ v.detail }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      <div class="empty-small">&#10003; Pas de gap critique détecté</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-section-title">&#127919; Services recommandés</div>
+    {% if prospect.services_needed %}
+    <div class="services-list">
+      {% set icons = {'Création de Site Web':'&#127760;','Référencement SEO':'&#128269;','Gestion des Réseaux Sociaux':'&#128241;','Création de Contenu':'&#127912;','Publicité Payante (Google Ads)':'&#128176;','Gestion de Réputation':'&#11088;'} %}
+      {% set colors = {'Création de Site Web':'#6366f1','Référencement SEO':'#f59e0b','Gestion des Réseaux Sociaux':'#ec4899','Création de Contenu':'#8b5cf6','Publicité Payante (Google Ads)':'#10b981','Gestion de Réputation':'#f97316'} %}
+      {% for s in prospect.services_needed %}
+      <div class="service-item" style="border-left-color:{{ colors.get(s,'#6366f1') }}">
+        <span class="service-icon">{{ icons.get(s,'&#10003;')|safe }}</span>
+        <div>
+          <div class="service-name">{{ s }}</div>
+          <div class="service-sub">Service recommandé pour ce profil</div>
+        </div>
+        <span class="service-tag" style="color:{{ colors.get(s,'#6366f1') }};background:{{ colors.get(s,'#6366f1') }}20">Priorité</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <div class="btn-row" style="margin-top:1.25rem">
+      <a href="/prospect/{{ prospect.id }}/outreach" class="btn btn-primary" style="flex:1;justify-content:center">
+        &#9993; Générer les messages
+      </a>
+      <a href="/prospect/{{ prospect.id }}/ai-analysis" class="btn btn-ai" style="flex:1;justify-content:center">
+        &#10024; Analyse IA complète
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Pipeline + Notes + Recent Activity -->
+<div class="three-col-grid">
+
+  <div class="card">
+    <div class="card-section-title">&#8651; Statut Pipeline</div>
+    <div class="pipeline-steps">
+      {% for key, label, color in pipeline_stages %}
+      <div class="pipeline-step {% if prospect.status == key %}active{% endif %}">
+        <div class="step-dot {% if prospect.status == key %}active{% endif %}" style="{% if prospect.status == key %}background:{{ color }};box-shadow:0 0 8px {{ color }}{% endif %}"></div>
+        <span class="step-label">{{ label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="form-stack" style="margin-top:1.25rem">
+      <select id="statusSelect" class="filter-select w-full">
+        {% for key, label, color in pipeline_stages %}
+        <option value="{{ key }}" {% if prospect.status==key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+        <option value="archived">Archiver</option>
+      </select>
+      <textarea id="statusNote" class="textarea" placeholder="Note optionnelle..." rows="2"></textarea>
+      <button onclick="updateStatus({{ prospect.id }})" class="btn btn-primary w-full">Mettre à jour</button>
+      <button onclick="archiveProspect({{ prospect.id }})" class="btn btn-danger w-full" style="margin-top:.5rem">
+        &#9783; Archiver ce prospect
+      </button>
+    </div>
+
+    <div class="form-stack" style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+      <div class="card-section-title" style="margin-bottom:.75rem">&#128336; Relance programmée</div>
+      <input type="date" id="followUpDate" class="filter-select w-full"
+        value="{{ prospect.next_follow_up or '' }}" />
+      <button onclick="setFollowUp({{ prospect.id }})" class="btn btn-secondary w-full" style="margin-top:.5rem">
+        Enregistrer relance
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-section-title">&#128196; Notes internes</div>
+    <div class="form-stack" style="margin-bottom:1rem">
+      <textarea id="newNote" class="textarea" placeholder="Ajouter une note..." rows="2"></textarea>
+      <button onclick="addNote({{ prospect.id }})" class="btn btn-secondary w-full">Ajouter</button>
+    </div>
+    <div class="notes-list">
+      {% if notes %}
+        {% for n in notes %}
+        <div class="note-item">
+          {% if n.status_change %}<span class="note-status">{{ n.status_change }}</span>{% endif %}
+          {% if n.note %}<p class="note-text">{{ n.note }}</p>{% endif %}
+          <span class="note-date">{{ n.created_at[:16] }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-small">Aucune note pour l'instant</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-section-title-row">
+      <span>&#128337; Activité récente</span>
+      <a href="/prospect/{{ prospect.id }}/activity" class="link-small">Voir tout</a>
+    </div>
+    {% if recent_interactions %}
+      <div class="mini-timeline">
+        {% for i in recent_interactions %}
+        <div class="mini-timeline-item">
+          <div class="mini-dot"></div>
+          <div class="mini-body">
+            <div class="mini-type">{{ i.type|capitalize }} · {{ i.interaction_date }}</div>
+            <p class="mini-summary">{{ i.summary[:80] }}{% if i.summary|length > 80 %}…{% endif %}</p>
+            <span class="outcome-badge outcome-{{ i.outcome }}">
+              {{ {'positif':'Positif','neutre':'Neutre','negatif':'Négatif','sans_reponse':'Sans réponse','rappel':'À rappeler'}.get(i.outcome,'Neutre') }}
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-small">Aucune interaction enregistrée</div>
+    {% endif %}
+    <a href="/prospect/{{ prospect.id }}/activity" class="btn btn-secondary w-full" style="margin-top:1rem">
+      + Ajouter une interaction
+    </a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateStatus(id) {
+  const status = document.getElementById('statusSelect').value;
+  const note   = document.getElementById('statusNote').value;
+  fetch(`/api/prospect/${id}/status`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({status, note})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){ showToast('Statut mis à jour !'); setTimeout(()=>location.reload(),700); }
+  });
+}
+function addNote(id) {
+  const note = document.getElementById('newNote').value.trim();
+  if(!note) return;
+  fetch(`/api/prospect/${id}/note`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({note})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){ showToast('Note ajoutée !'); setTimeout(()=>location.reload(),700); }
+  });
+}
+function archiveProspect(id) {
+  if(!confirm('Archiver ce prospect ?')) return;
+  fetch(`/api/prospect/${id}/archive`, {method:'POST'})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){ showToast('Archivé !'); setTimeout(()=>window.location='/',700); }
+    });
+}
+function setFollowUp(id) {
+  const date = document.getElementById('followUpDate').value;
+  fetch(`/api/prospect/${id}/follow-up`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({next_follow_up: date})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success) showToast('Relance enregistrée !');
+  });
+}
+</script>
+{% endblock %}

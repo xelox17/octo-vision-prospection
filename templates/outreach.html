@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Messages — {{ prospect.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <a href="/prospect/{{ prospect.id }}" class="back-btn">&#8592; Retour</a>
+    <div>
+      <h1 class="page-title">Messages de Prospection</h1>
+      <p class="page-sub">{{ prospect.name }} — {{ prospect.category }}</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="/prospect/{{ prospect.id }}/ai-analysis" class="btn btn-ai">&#10024; Analyse IA</a>
+  </div>
+</div>
+
+<!-- Services summary -->
+<div class="card" style="margin-bottom:1.5rem">
+  <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <span style="font-weight:600;color:var(--text-secondary);font-size:.875rem">Services recommandés :</span>
+    {% for s in prospect.services_needed %}
+      <span class="category-badge" style="background:#6366f115;color:#6366f1;border-color:#6366f130">{{ s }}</span>
+    {% endfor %}
+    {% if not prospect.services_needed %}
+      <span class="muted">Aucun service spécifique identifié</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs-nav">
+  <button class="tab-btn active" onclick="switchTab('email',this)">&#128231; Email froid</button>
+  <button class="tab-btn" onclick="switchTab('dm',this)">&#128241; DM Instagram/Facebook</button>
+  <button class="tab-btn" onclick="switchTab('whatsapp',this)">&#128172; WhatsApp</button>
+</div>
+
+<!-- Email Tab -->
+<div id="tab-email" class="tab-content active">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">&#128231; Email Froid Personnalisé</h2>
+      <div class="btn-row">
+        <button onclick="copyText('emailBody')" class="btn btn-secondary btn-sm-text">&#128203; Copier</button>
+        <button onclick="improveWithAI('email')" class="btn btn-ai btn-sm-text">&#10024; Améliorer avec IA</button>
+      </div>
+    </div>
+    <div class="message-meta">
+      <span class="meta-label">Objet :</span>
+      <span id="emailSubject" class="meta-value">{{ email_subject }}</span>
+      <button onclick="copySubject()" class="btn-copy-small" title="Copier l'objet">&#128203;</button>
+    </div>
+    <div class="message-box" id="emailBody" contenteditable="true" spellcheck="false">{{ email_body }}</div>
+    <div class="tips-box" style="margin-top:1rem">
+      <strong>&#128161; Conseils d'envoi :</strong> Personnalisez [Votre Prénom] avant d'envoyer.
+      Meilleur taux d'ouverture : mardi-jeudi, 10h-11h ou 14h-16h.
+    </div>
+  </div>
+</div>
+
+<!-- DM Tab -->
+<div id="tab-dm" class="tab-content hidden">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">&#128241; DM Instagram / Facebook</h2>
+      <div class="btn-row">
+        <button onclick="copyText('dmBody')" class="btn btn-secondary btn-sm-text">&#128203; Copier</button>
+        <button onclick="improveWithAI('dm')" class="btn btn-ai btn-sm-text">&#10024; Améliorer avec IA</button>
+      </div>
+    </div>
+    {% if prospect.has_instagram and prospect.instagram_handle %}
+      <div class="platform-link-bar" style="background:#e1306c15;border-color:#e1306c30;margin-bottom:1rem">
+        <span>&#128247; {{ prospect.instagram_handle }}</span>
+        <span class="muted" style="font-size:.8rem">{{ "{:,}".format(prospect.instagram_followers) }} abonnés</span>
+      </div>
+    {% endif %}
+    <div class="message-box" id="dmBody" contenteditable="true" spellcheck="false">{{ dm_body }}</div>
+    <div class="tips-box" style="margin-top:1rem">
+      <strong>&#128161; Conseils :</strong> Likez 2-3 publications avant d'envoyer pour augmenter le taux de réponse.
+      Maximum 20 DMs/jour pour éviter les restrictions.
+    </div>
+  </div>
+</div>
+
+<!-- WhatsApp Tab -->
+<div id="tab-whatsapp" class="tab-content hidden">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">&#128172; Message WhatsApp</h2>
+      <div class="btn-row">
+        <button onclick="copyText('waBody')" class="btn btn-secondary btn-sm-text">&#128203; Copier</button>
+        <button onclick="improveWithAI('whatsapp')" class="btn btn-ai btn-sm-text">&#10024; Améliorer avec IA</button>
+      </div>
+    </div>
+    {% if prospect.phone %}
+      <div class="platform-link-bar" style="background:#25d36615;border-color:#25d36630;margin-bottom:1rem">
+        <span>&#128222; {{ prospect.phone }}</span>
+        <a href="https://wa.me/{{ prospect.phone|replace(' ','')|replace('+','') }}"
+           target="_blank" class="btn btn-success btn-sm-text">
+          Ouvrir WhatsApp
+        </a>
+      </div>
+    {% else %}
+      <div class="tips-box" style="margin-bottom:1rem;background:#f59e0b10;border-color:#f59e0b30">
+        &#9888;&#65039; Pas de numéro de téléphone disponible pour ce prospect.
+      </div>
+    {% endif %}
+    <div class="message-box" id="waBody" contenteditable="true" spellcheck="false">{{ whatsapp_body }}</div>
+    <div class="tips-box" style="margin-top:1rem">
+      <strong>&#128161; Conseils :</strong> Envoyez entre 9h-11h. Attendez 48h avant de relancer.
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-top:1.5rem">
+  <div class="card-section-title">&#9889; Actions rapides après envoi</div>
+  <div class="quick-steps-grid">
+    <div class="quick-step">
+      <span class="quick-step-num">1</span>
+      <div><strong>Copier & Envoyer</strong><p>Utilisez le bouton "Copier" puis envoyez via votre outil préféré</p></div>
+    </div>
+    <div class="quick-step">
+      <span class="quick-step-num">2</span>
+      <div><strong>Personnaliser</strong><p>Remplacez [Votre Prénom] par votre nom avant d'envoyer</p></div>
+    </div>
+    <div class="quick-step">
+      <span class="quick-step-num">3</span>
+      <div><strong>Logger & Tracker</strong><p>Enregistrez l'envoi dans le journal d'activité</p></div>
+    </div>
+  </div>
+
+  <div class="btn-row" style="margin-top:1.25rem;flex-wrap:wrap">
+    <select id="quickStatus" class="filter-select">
+      <option value="contacted">Marquer comme Contacté</option>
+      <option value="interested">Marquer comme Intéressé</option>
+    </select>
+    <button onclick="markContacted({{ prospect.id }})" class="btn btn-primary">
+      &#10003; Confirmer l'envoi
+    </button>
+    <a href="/prospect/{{ prospect.id }}/activity" class="btn btn-secondary">
+      &#128196; Logger l'interaction
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => { t.classList.add('hidden'); t.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+function copyText(id) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('Copié dans le presse-papier !'));
+}
+function copySubject() {
+  const text = document.getElementById('emailSubject').innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('Objet copié !'));
+}
+function markContacted(id) {
+  const status = document.getElementById('quickStatus').value;
+  fetch(`/api/prospect/${id}/status`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({status, note:'Message envoyé via la plateforme de prospection'})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success) showToast('Statut mis à jour !');
+  });
+}
+function improveWithAI(type) {
+  showToast('Amélioration IA disponible avec l\'intégration Claude API');
+}
+</script>
+{% endblock %}

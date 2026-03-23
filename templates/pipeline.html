@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Pipeline CRM — Octo Vision{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Pipeline CRM</h1>
+    <p class="page-sub">Suivi des prospects par étape de vente</p>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">&#128202; Dashboard</a>
+  </div>
+</div>
+
+<!-- Pipeline value summary -->
+<div class="stats-grid" style="grid-template-columns:repeat(6,1fr);margin-bottom:1.5rem">
+  {% for key, label, color in pipeline_stages %}
+  <div class="stat-card" style="text-align:center;border-top:3px solid {{ color }}">
+    <div class="stat-body" style="align-items:center">
+      <span class="stat-value" style="color:{{ color }};font-size:1.6rem">{{ stages_data[key].prospects|length }}</span>
+      <span class="stat-label" style="text-align:center">{{ label }}</span>
+      {% if stages_data[key].total_value > 0 %}
+        <span style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem">
+          {{ "{:,}".format(stages_data[key].total_value) }} TND
+        </span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Kanban -->
+<div class="kanban-board">
+  {% for key, label, color in pipeline_stages %}
+  <div class="kanban-col">
+    <div class="kanban-col-header" style="border-top:3px solid {{ color }}">
+      <div>
+        <span class="kanban-col-title" style="color:{{ color }}">{{ label }}</span>
+        {% if stages_data[key].total_value > 0 %}
+          <div style="font-size:.7rem;color:var(--text-muted)">{{ "{:,}".format(stages_data[key].total_value) }} TND</div>
+        {% endif %}
+      </div>
+      <span class="kanban-col-count">{{ stages_data[key].prospects|length }}</span>
+    </div>
+
+    <div class="kanban-cards">
+      {% for p in stages_data[key].prospects %}
+      <div class="kanban-card" onclick="window.location='/prospect/{{ p.id }}'">
+        <div class="kanban-card-top">
+          <span class="kanban-card-name">{{ p.name }}</span>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <div class="priority-dot priority-{{ p.priority or 'medium' }}"></div>
+            <span class="score-dot score-{{ p.score_class }}">{{ p.score }}</span>
+          </div>
+        </div>
+        <div class="kanban-card-cat">{{ p.category }}</div>
+        {% if p.estimated_value %}
+          <div class="kanban-card-value">{{ "{:,}".format(p.estimated_value) }} TND/mois</div>
+        {% endif %}
+        <div class="kanban-card-meta">
+          <span>&#9733; {{ p.google_rating }}</span>
+          {% if p.has_website %}<span>&#127760; Site</span>{% endif %}
+          {% if p.has_instagram %}<span>&#128247; IG</span>{% endif %}
+        </div>
+        {% if p.services_needed %}
+        <div class="kanban-services">
+          {% for s in p.services_needed[:2] %}
+            <span class="kanban-service-tag">{{ s }}</span>
+          {% endfor %}
+          {% if p.services_needed|length > 2 %}
+            <span class="kanban-service-tag">+{{ p.services_needed|length - 2 }}</span>
+          {% endif %}
+        </div>
+        {% endif %}
+        <div class="kanban-card-actions" onclick="event.stopPropagation()">
+          <div class="kanban-action-row">
+            <a href="/prospect/{{ p.id }}/activity" class="action-btn" title="Activité">&#128196;</a>
+            <a href="/prospect/{{ p.id }}/outreach" class="action-btn action-btn-green" title="Message">&#9993;</a>
+            <a href="/prospect/{{ p.id }}/ai-analysis" class="action-btn action-btn-ai" title="IA">&#10024;</a>
+          </div>
+          <select class="kanban-status-select" onchange="moveCard({{ p.id }}, this.value, this)">
+            {% for sk, sl, sc in pipeline_stages %}
+            <option value="{{ sk }}" {% if sk==p.status %}selected{% endif %}>&#8594; {{ sl }}</option>
+            {% endfor %}
+            <option value="archived">&#9783; Archiver</option>
+          </select>
+        </div>
+      </div>
+      {% endfor %}
+      {% if not stages_data[key].prospects %}
+      <div class="kanban-empty">Aucun prospect ici</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function moveCard(id, status, selectEl) {
+  fetch(`/api/prospect/${id}/status`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({status, note:''})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){
+      showToast('Déplacé !');
+      setTimeout(()=>location.reload(), 500);
+    }
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Octo Vision — Prospection{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">OV</div>
+      <div class="brand-text">
+        <span class="brand-name">Octo Vision</span>
+        <span class="brand-sub">Prospection CRM</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">PRINCIPAL</div>
+      <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <span class="nav-icon">&#9783;</span>
+        <span>Tableau de bord</span>
+      </a>
+      <a href="{{ url_for('pipeline') }}" class="nav-item {% if request.endpoint == 'pipeline' %}active{% endif %}">
+        <span class="nav-icon">&#8651;</span>
+        <span>Pipeline CRM</span>
+      </a>
+
+      <div class="nav-section-label" style="margin-top:1.5rem">INTELLIGENCE</div>
+      <a href="{{ url_for('ai_insights') }}" class="nav-item nav-item-ai {% if request.endpoint in ['ai_insights','ai_analysis'] %}active{% endif %}">
+        <span class="nav-icon">&#10024;</span>
+        <span>Analyse IA</span>
+        <span class="nav-badge-ai">BETA</span>
+      </a>
+
+      <div class="nav-section-label" style="margin-top:1.5rem">DONNÉES</div>
+      <a href="{{ url_for('archive') }}" class="nav-item {% if request.endpoint == 'archive' %}active{% endif %}">
+        <span class="nav-icon">&#9783;</span>
+        <span>Archive</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="agency-pill">
+        <span class="agency-dot"></span>
+        <span>octovisiondigitalsolutions.com</span>
+      </div>
+      <div class="sidebar-version">v2.0 — Données mock</div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="toast-container"></div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

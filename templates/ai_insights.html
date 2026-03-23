@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block title %}Analyse IA — Octo Vision{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">&#10024; Intelligence Artificielle</h1>
+    <p class="page-sub">Analyse prédictive et recommandations — Propulsé par Claude AI</p>
+  </div>
+  <div class="header-actions">
+    <span class="ai-status-badge">
+      <span class="ai-dot"></span>
+      Claude API — Connexion à venir
+    </span>
+  </div>
+</div>
+
+<!-- AI Status Banner -->
+<div class="ai-banner">
+  <div class="ai-banner-icon">&#10024;</div>
+  <div class="ai-banner-body">
+    <strong>Mode Aperçu — Données simulées</strong>
+    <p>L'intégration Claude AI est prête à être activée. Les analyses ci-dessous sont générées avec des algorithmes de scoring. La vraie IA sera 10x plus précise.</p>
+  </div>
+  <div class="ai-banner-actions">
+    <button class="btn btn-ai" onclick="showToast('Claude API sera intégrée prochainement !')">
+      Activer Claude AI
+    </button>
+  </div>
+</div>
+
+<!-- Quick stats -->
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="stat-card ai-stat-card">
+    <div class="stat-icon-wrap" style="--c:#6366f1">&#127919;</div>
+    <div class="stat-body">
+      <span class="stat-value">{{ total }}</span>
+      <span class="stat-label">Prospects analysés</span>
+    </div>
+  </div>
+  <div class="stat-card ai-stat-card">
+    <div class="stat-icon-wrap" style="--c:#10b981">&#128200;</div>
+    <div class="stat-body">
+      <span class="stat-value">{{ conversion_rate }}%</span>
+      <span class="stat-label">Taux de conversion actuel</span>
+    </div>
+  </div>
+  <div class="stat-card ai-stat-card">
+    <div class="stat-icon-wrap" style="--c:#f59e0b">&#127942;</div>
+    <div class="stat-body">
+      <span class="stat-value">{{ won }}</span>
+      <span class="stat-label">Deals closés</span>
+    </div>
+  </div>
+</div>
+
+<!-- Top Prospects with AI Score -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">&#128293; Top 5 Prospects — Recommandés par IA</h2>
+    <button onclick="runBatchAnalysis()" class="btn btn-ai">&#10024; Analyser tous</button>
+  </div>
+
+  <div class="ai-prospects-list" id="aiProspectsList">
+    {% for p in top_prospects %}
+    <div class="ai-prospect-card" id="ai-card-{{ p.id }}">
+      <div class="ai-prospect-left">
+        <div class="ai-rank">{{ loop.index }}</div>
+        <div>
+          <div class="ai-prospect-name">{{ p.name }}</div>
+          <div class="ai-prospect-cat">{{ p.category }} — {{ p.address[:35] }}{% if p.address|length > 35 %}…{% endif %}</div>
+        </div>
+      </div>
+
+      <div class="ai-prospect-scores">
+        <div class="ai-score-item">
+          <span class="ai-score-label">Score besoin</span>
+          <span class="score-num score-{{ p.score_class }}">{{ p.score }}</span>
+        </div>
+        <div class="ai-score-item">
+          <span class="ai-score-label">Valeur</span>
+          <span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} TND</span>
+        </div>
+      </div>
+
+      <div class="ai-prospect-services">
+        {% for s in p.services_needed[:2] %}
+          <span class="category-badge">{{ s }}</span>
+        {% endfor %}
+        {% if p.services_needed|length > 2 %}
+          <span class="category-badge">+{{ p.services_needed|length - 2 }}</span>
+        {% endif %}
+      </div>
+
+      <div class="ai-prospect-actions">
+        <button onclick="analyzeProspect({{ p.id }}, '{{ p.name }}')" class="btn btn-ai btn-sm-text">
+          &#10024; Analyser
+        </button>
+        <a href="/prospect/{{ p.id }}/ai-analysis" class="btn btn-secondary btn-sm-text">
+          Voir profil complet
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- AI Features Preview -->
+<div class="two-col-grid">
+  <div class="card ai-feature-card">
+    <div class="ai-feature-header">
+      <span class="ai-feature-icon">&#128172;</span>
+      <div>
+        <div class="ai-feature-title">Rédaction automatique</div>
+        <div class="ai-feature-sub">Emails, DMs, WhatsApp personnalisés par Claude</div>
+      </div>
+      <span class="coming-soon-badge">Actif</span>
+    </div>
+    <p class="ai-feature-desc">
+      Génération de messages de prospection ultra-personnalisés basés sur le profil
+      digital de chaque établissement. Taux de réponse estimé : <strong>3x supérieur</strong> aux messages génériques.
+    </p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-sm-text" style="margin-top:.75rem">
+      Voir les prospects
+    </a>
+  </div>
+
+  <div class="card ai-feature-card">
+    <div class="ai-feature-header">
+      <span class="ai-feature-icon">&#128269;</span>
+      <div>
+        <div class="ai-feature-title">Analyse des gaps digitaux</div>
+        <div class="ai-feature-sub">Détection automatique des vulnérabilités</div>
+      </div>
+      <span class="coming-soon-badge">Actif</span>
+    </div>
+    <p class="ai-feature-desc">
+      Scoring automatique de 8 indicateurs clés : site web, SEO, Instagram, Facebook,
+      avis Google, activité, et plus encore.
+    </p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-sm-text" style="margin-top:.75rem">
+      Voir les analyses
+    </a>
+  </div>
+
+  <div class="card ai-feature-card">
+    <div class="ai-feature-header">
+      <span class="ai-feature-icon">&#128200;</span>
+      <div>
+        <div class="ai-feature-title">Prédiction de conversion</div>
+        <div class="ai-feature-sub">Probabilité de closing par Claude AI</div>
+      </div>
+      <span class="coming-soon-badge soon">Bientôt</span>
+    </div>
+    <p class="ai-feature-desc">
+      Claude analysera l'historique des interactions, le timing, les signaux d'intérêt
+      et prédit la probabilité de conversion avec un score de confiance.
+    </p>
+    <button class="btn btn-secondary btn-sm-text" style="margin-top:.75rem" onclick="showToast('Disponible avec l\\'intégration Claude API')">
+      Aperçu
+    </button>
+  </div>
+
+  <div class="card ai-feature-card">
+    <div class="ai-feature-header">
+      <span class="ai-feature-icon">&#128247;</span>
+      <div>
+        <div class="ai-feature-title">Scan Google Maps automatique</div>
+        <div class="ai-feature-sub">Détection de nouveaux prospects en continu</div>
+      </div>
+      <span class="coming-soon-badge soon">Bientôt</span>
+    </div>
+    <p class="ai-feature-desc">
+      Scan automatique de Google Maps pour détecter de nouveaux restaurants à Tunis,
+      extraire leurs données et les scorer automatiquement.
+    </p>
+    <button class="btn btn-secondary btn-sm-text" style="margin-top:.75rem" onclick="showToast('Disponible avec l\\'intégration Google Maps API')">
+      Aperçu
+    </button>
+  </div>
+</div>
+
+<!-- AI Analysis Result Modal -->
+<div id="aiModal" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box" id="aiModalBox">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">Analyse IA</h3>
+      <button onclick="closeAiModal()" class="modal-close">&times;</button>
+    </div>
+    <div id="aiModalContent">
+      <div class="ai-loading">
+        <div class="ai-spinner"></div>
+        <p>Claude analyse le profil en cours...</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function analyzeProspect(id, name) {
+  document.getElementById('modalTitle').textContent = 'Analyse IA — ' + name;
+  document.getElementById('aiModal').style.display = 'flex';
+  document.getElementById('aiModalContent').innerHTML = `
+    <div class="ai-loading">
+      <div class="ai-spinner"></div>
+      <p>Analyse du profil digital de ${name}...</p>
+    </div>`;
+
+  fetch(`/api/ai/analyze/${id}`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('aiModalContent').innerHTML = renderAnalysis(data);
+    })
+    .catch(() => {
+      document.getElementById('aiModalContent').innerHTML = '<p class="muted">Erreur lors de l\'analyse</p>';
+    });
+}
+
+function renderAnalysis(d) {
+  const probColor = d.conversion_probability >= 60 ? '#10b981' : d.conversion_probability >= 35 ? '#f59e0b' : '#ef4444';
+  return `
+    <div class="ai-result">
+      <div class="ai-result-top">
+        <div class="ai-result-prob" style="color:${probColor}">
+          <span class="ai-prob-value">${d.conversion_probability}%</span>
+          <span class="ai-prob-label">Probabilité de conversion</span>
+        </div>
+        <div class="ai-result-meta">
+          <div><strong>Meilleur canal :</strong> ${d.best_channel}</div>
+          <div><strong>Meilleur moment :</strong> ${d.best_time}</div>
+          <div><strong>Valeur estimée :</strong> ${d.estimated_deal_value.toLocaleString()} TND/mois</div>
+        </div>
+      </div>
+
+      <div class="ai-insight-box">
+        <div class="ai-insight-label">&#128161; Insight clé</div>
+        <p>${d.key_insight}</p>
+      </div>
+
+      <div class="ai-insight-box">
+        <div class="ai-insight-label">&#128200; ROI attendu</div>
+        <p>${d.expected_roi}</p>
+      </div>
+
+      <div class="ai-insight-box">
+        <div class="ai-insight-label">&#127919; Approche recommandée</div>
+        <p>${d.recommended_approach}</p>
+      </div>
+
+      <div class="ai-model-note">
+        <span>&#10024; ${d.model}</span>
+        <span>Généré le ${new Date(d.generated_at).toLocaleString('fr-FR')}</span>
+      </div>
+    </div>`;
+}
+
+function runBatchAnalysis() {
+  showToast('Analyse de tous les prospects... (simulation)');
+  const cards = document.querySelectorAll('.ai-prospect-card');
+  cards.forEach((card, i) => {
+    setTimeout(() => {
+      card.style.borderColor = 'var(--accent)';
+      card.style.background = 'var(--accent-glow)';
+      setTimeout(() => {
+        card.style.borderColor = '';
+        card.style.background = '';
+      }, 800);
+    }, i * 300);
+  });
+}
+
+function closeAiModal() {
+  document.getElementById('aiModal').style.display = 'none';
+}
+function closeModal(e) {
+  if(e.target.id === 'aiModal') closeAiModal();
+}
+</script>
+{% endblock %}

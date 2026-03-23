@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}Activité — {{ prospect.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <a href="/prospect/{{ prospect.id }}" class="back-btn">&#8592; {{ prospect.name }}</a>
+    <div>
+      <h1 class="page-title">Journal d'activité</h1>
+      <p class="page-sub">Historique complet des interactions avec {{ prospect.name }}</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="/prospect/{{ prospect.id }}/outreach" class="btn btn-secondary">&#9993; Messages</a>
+    <button class="btn btn-primary" onclick="toggleForm()">+ Nouvelle interaction</button>
+  </div>
+</div>
+
+<!-- Activity stats -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#6366f1">&#128196;</div>
+    <div class="stat-body"><span class="stat-value">{{ stats.total }}</span><span class="stat-label">Total interactions</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#f59e0b">&#128222;</div>
+    <div class="stat-body"><span class="stat-value">{{ stats.calls }}</span><span class="stat-label">Appels</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#8b5cf6">&#129309;</div>
+    <div class="stat-body"><span class="stat-value">{{ stats.meetings }}</span><span class="stat-label">Réunions</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#10b981">&#10003;</div>
+    <div class="stat-body"><span class="stat-value">{{ stats.positive }}</span><span class="stat-label">Résultats positifs</span></div>
+  </div>
+</div>
+
+<!-- Add interaction form (hidden by default) -->
+<div id="addForm" class="card" style="display:none;border:2px solid var(--accent)">
+  <div class="card-header">
+    <h3 class="card-title">+ Nouvelle interaction</h3>
+    <button onclick="toggleForm()" class="btn btn-secondary btn-sm-text">Fermer</button>
+  </div>
+  <div class="form-grid-2">
+    <div class="form-field">
+      <label class="form-label">Type d'interaction *</label>
+      <select id="intType" class="filter-select w-full">
+        {% for key, label, icon in interaction_types %}
+        <option value="{{ key }}">{{ icon }} {{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Date *</label>
+      <input type="date" id="intDate" class="filter-select w-full" value="{{ today }}" />
+    </div>
+    <div class="form-field">
+      <label class="form-label">Durée (minutes)</label>
+      <input type="number" id="intDuration" class="filter-select w-full" placeholder="ex: 15" min="0" />
+    </div>
+    <div class="form-field">
+      <label class="form-label">Interlocuteur</label>
+      <input type="text" id="intContact" class="filter-select w-full" placeholder="Nom du contact" />
+    </div>
+    <div class="form-field full-width">
+      <label class="form-label">Résumé de l'échange *</label>
+      <textarea id="intSummary" class="textarea" rows="3"
+        placeholder="De quoi avez-vous parlé ? Qu'est-ce qui a été dit ?"></textarea>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Résultat</label>
+      <select id="intOutcome" class="filter-select w-full">
+        {% for key, label in outcomes %}
+        <option value="{{ key }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Prochaine action</label>
+      <input type="text" id="intNextAction" class="filter-select w-full"
+        placeholder="ex: Envoyer devis, Rappeler..." />
+    </div>
+    <div class="form-field">
+      <label class="form-label">Date de la prochaine action</label>
+      <input type="date" id="intNextDate" class="filter-select w-full" />
+    </div>
+  </div>
+  <div class="btn-row" style="margin-top:1.25rem">
+    <button onclick="saveInteraction({{ prospect.id }})" class="btn btn-primary" style="min-width:160px">
+      Enregistrer
+    </button>
+    <button onclick="toggleForm()" class="btn btn-secondary">Annuler</button>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="two-col-grid" style="align-items:start">
+
+  <div class="card">
+    <div class="card-section-title">Chronologie des interactions</div>
+    {% if interactions %}
+    <div class="timeline">
+      {% for i in interactions %}
+      <div class="timeline-item outcome-border-{{ i.outcome }}">
+        <div class="timeline-dot
+          {% if i.type == 'appel' %}dot-call
+          {% elif i.type == 'reunion' %}dot-meeting
+          {% elif i.type == 'email' %}dot-email
+          {% elif i.type in ['dm','whatsapp'] %}dot-social
+          {% else %}dot-note{% endif %}">
+          {{ type_map.get(i.type, ('',''))[1] if type_map.get(i.type) else '📝' }}
+        </div>
+        <div class="timeline-body">
+          <div class="timeline-header">
+            <div class="timeline-type-row">
+              <span class="timeline-type">{{ type_map.get(i.type, (i.type,''))[0] }}</span>
+              {% if i.duration_min and i.duration_min > 0 %}
+                <span class="timeline-duration">{{ i.duration_min }} min</span>
+              {% endif %}
+              <span class="outcome-badge outcome-{{ i.outcome }}">
+                {{ outcome_map.get(i.outcome, i.outcome) }}
+              </span>
+            </div>
+            <div class="timeline-meta">
+              <span>{{ i.interaction_date }}</span>
+              {% if i.contact_name %}<span>· {{ i.contact_name }}</span>{% endif %}
+            </div>
+          </div>
+
+          <p class="timeline-summary">{{ i.summary }}</p>
+
+          {% if i.next_action %}
+          <div class="timeline-next">
+            <span class="next-action-label">&#8594; Prochaine action :</span>
+            <span class="next-action-text">{{ i.next_action }}</span>
+            {% if i.next_action_date %}
+              <span class="next-action-date">{{ i.next_action_date }}</span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <div class="timeline-footer">
+            <span class="timeline-created">Ajouté le {{ i.created_at[:16] }}</span>
+            <button onclick="deleteInteraction({{ prospect.id }}, {{ i.id }}, this)"
+              class="btn-delete" title="Supprimer">&#128465;</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">&#128196;</div>
+      <p>Aucune interaction enregistrée</p>
+      <button onclick="toggleForm()" class="btn btn-primary" style="margin-top:1rem">
+        + Ajouter la première interaction
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar: notes + meeting planner -->
+  <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+    <div class="card">
+      <div class="card-section-title">&#128336; Réunion programmée</div>
+      <div class="meeting-planner">
+        <div class="form-field">
+          <label class="form-label">Date & heure</label>
+          <input type="datetime-local" id="meetingDate" class="filter-select w-full" />
+        </div>
+        <div class="form-field" style="margin-top:.75rem">
+          <label class="form-label">Lieu / Mode</label>
+          <select id="meetingMode" class="filter-select w-full">
+            <option>En présentiel</option>
+            <option>Appel téléphonique</option>
+            <option>Zoom / Teams</option>
+            <option>WhatsApp video</option>
+          </select>
+        </div>
+        <div class="form-field" style="margin-top:.75rem">
+          <label class="form-label">Notes</label>
+          <textarea id="meetingNotes" class="textarea" rows="2" placeholder="Ordre du jour, points à aborder..."></textarea>
+        </div>
+        <button onclick="saveMeeting({{ prospect.id }})" class="btn btn-primary w-full" style="margin-top:.75rem">
+          Enregistrer la réunion
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-section-title">&#128203; Notes internes</div>
+      <div class="notes-list">
+        {% if notes %}
+          {% for n in notes %}
+          <div class="note-item">
+            {% if n.status_change %}<span class="note-status">{{ n.status_change }}</span>{% endif %}
+            {% if n.note %}<p class="note-text">{{ n.note }}</p>{% endif %}
+            <span class="note-date">{{ n.created_at[:16] }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-small">Aucune note</div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const today = "{{ today }}";
+
+function toggleForm() {
+  const f = document.getElementById('addForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  if(f.style.display === 'block') f.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function saveInteraction(pid) {
+  const summary = document.getElementById('intSummary').value.trim();
+  const intDate = document.getElementById('intDate').value;
+  if(!summary || !intDate) { showToast('Résumé et date requis', 'error'); return; }
+
+  const data = {
+    type:             document.getElementById('intType').value,
+    interaction_date: intDate,
+    duration_min:     parseInt(document.getElementById('intDuration').value) || 0,
+    contact_name:     document.getElementById('intContact').value,
+    summary,
+    outcome:          document.getElementById('intOutcome').value,
+    next_action:      document.getElementById('intNextAction').value,
+    next_action_date: document.getElementById('intNextDate').value,
+  };
+
+  fetch(`/api/prospect/${pid}/interaction`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){ showToast('Interaction enregistrée !'); setTimeout(()=>location.reload(), 700); }
+    else showToast(d.error || 'Erreur', 'error');
+  });
+}
+
+function deleteInteraction(pid, iid, btn) {
+  if(!confirm('Supprimer cette interaction ?')) return;
+  fetch(`/api/prospect/${pid}/interaction/${iid}`, {method:'DELETE'})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){ btn.closest('.timeline-item').remove(); showToast('Supprimée'); }
+    });
+}
+
+function saveMeeting(pid) {
+  const dt    = document.getElementById('meetingDate').value;
+  const mode  = document.getElementById('meetingMode').value;
+  const notes = document.getElementById('meetingNotes').value;
+  if(!dt) { showToast('Sélectionnez une date', 'error'); return; }
+
+  const data = {
+    type: 'reunion',
+    interaction_date: dt.split('T')[0],
+    summary: `Réunion ${mode} programmée${notes ? ' — ' + notes : ''}`,
+    outcome: 'neutre',
+    next_action: 'Conduire la réunion',
+    next_action_date: dt.split('T')[0],
+  };
+
+  fetch(`/api/prospect/${pid}/interaction`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  }).then(r=>r.json()).then(d=>{
+    if(d.success){ showToast('Réunion programmée !'); setTimeout(()=>location.reload(), 700); }
+  });
+}
+</script>
+{% endblock %}

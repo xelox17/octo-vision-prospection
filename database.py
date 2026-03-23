@@ -1,0 +1,426 @@
+import sqlite3
+import json
+from datetime import datetime, date
+
+DB_PATH = "prospection.db"
+
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS prospects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            category TEXT NOT NULL,
+            address TEXT NOT NULL,
+            phone TEXT,
+            email TEXT,
+            google_rating REAL DEFAULT 0,
+            review_count INTEGER DEFAULT 0,
+            has_website INTEGER DEFAULT 0,
+            website_url TEXT,
+            has_instagram INTEGER DEFAULT 0,
+            instagram_handle TEXT,
+            instagram_followers INTEGER DEFAULT 0,
+            has_facebook INTEGER DEFAULT 0,
+            last_post_days_ago INTEGER DEFAULT 999,
+            seo_score INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'new',
+            notes TEXT DEFAULT '',
+            score INTEGER DEFAULT 0,
+            services_needed TEXT DEFAULT '[]',
+            priority TEXT DEFAULT 'medium',
+            estimated_value INTEGER DEFAULT 0,
+            next_follow_up TEXT DEFAULT '',
+            last_contact_date TEXT DEFAULT '',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Migrate: add new columns to existing DB gracefully
+    migrations = [
+        ("priority", "TEXT DEFAULT 'medium'"),
+        ("estimated_value", "INTEGER DEFAULT 0"),
+        ("next_follow_up", "TEXT DEFAULT ''"),
+        ("last_contact_date", "TEXT DEFAULT ''"),
+    ]
+    for col_name, col_def in migrations:
+        try:
+            c.execute(f"ALTER TABLE prospects ADD COLUMN {col_name} {col_def}")
+        except sqlite3.OperationalError:
+            pass
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS interactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prospect_id INTEGER NOT NULL,
+            type TEXT NOT NULL DEFAULT 'note',
+            interaction_date TEXT NOT NULL,
+            duration_min INTEGER DEFAULT 0,
+            contact_name TEXT DEFAULT '',
+            summary TEXT NOT NULL DEFAULT '',
+            outcome TEXT DEFAULT 'neutre',
+            next_action TEXT DEFAULT '',
+            next_action_date TEXT DEFAULT '',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (prospect_id) REFERENCES prospects(id)
+        )
+    """)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS pipeline_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prospect_id INTEGER,
+            note TEXT,
+            status_change TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (prospect_id) REFERENCES prospects(id)
+        )
+    """)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS outreach_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prospect_id INTEGER,
+            message_type TEXT,
+            subject TEXT,
+            body TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (prospect_id) REFERENCES prospects(id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+MOCK_PROSPECTS = [
+    {
+        "name": "Restaurant Le Carthage",
+        "category": "Restaurant",
+        "address": "Avenue Habib Bourguiba, Tunis Centre",
+        "phone": "+216 71 234 567",
+        "email": None,
+        "google_rating": 3.8,
+        "review_count": 42,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 1, "last_post_days_ago": 90, "seo_score": 12,
+        "priority": "urgent", "estimated_value": 2800,
+    },
+    {
+        "name": "Dar El Jeld",
+        "category": "Restaurant Traditionnel",
+        "address": "Rue Dar El Jeld, Médina de Tunis",
+        "phone": "+216 71 560 916",
+        "email": "contact@dareljeld.tn",
+        "google_rating": 4.6, "review_count": 312,
+        "has_website": 1, "website_url": "dareljeld.tn",
+        "has_instagram": 1, "instagram_handle": "@dareljeld", "instagram_followers": 4800,
+        "has_facebook": 1, "last_post_days_ago": 7, "seo_score": 58,
+        "priority": "low", "estimated_value": 1200,
+    },
+    {
+        "name": "Pizza Napoli Tunis",
+        "category": "Pizzeria",
+        "address": "Rue de Marseille, La Marsa",
+        "phone": "+216 71 774 321",
+        "email": None,
+        "google_rating": 4.1, "review_count": 87,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@pizzanapoli_tunis", "instagram_followers": 920,
+        "has_facebook": 1, "last_post_days_ago": 45, "seo_score": 20,
+        "priority": "high", "estimated_value": 2200,
+    },
+    {
+        "name": "Café Saf Saf",
+        "category": "Café & Snack",
+        "address": "Avenue de la Liberté, Tunis",
+        "phone": "+216 71 890 123",
+        "email": None,
+        "google_rating": 3.2, "review_count": 18,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 0, "last_post_days_ago": 999, "seo_score": 0,
+        "priority": "urgent", "estimated_value": 3200,
+    },
+    {
+        "name": "Sushi Zen Carthage",
+        "category": "Restaurant Japonais",
+        "address": "Rue Hannibal, Les Berges du Lac",
+        "phone": "+216 71 963 852",
+        "email": "info@sushizen.tn",
+        "google_rating": 4.4, "review_count": 156,
+        "has_website": 1, "website_url": "sushizen.tn",
+        "has_instagram": 1, "instagram_handle": "@sushizen_tn", "instagram_followers": 2300,
+        "has_facebook": 1, "last_post_days_ago": 3, "seo_score": 45,
+        "priority": "medium", "estimated_value": 900,
+    },
+    {
+        "name": "Snack Brik & More",
+        "category": "Snack Tunisien",
+        "address": "Rue Ibn Khaldoun, Bab Souika",
+        "phone": "+216 23 456 789",
+        "email": None,
+        "google_rating": 4.0, "review_count": 63,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@brikandmore", "instagram_followers": 450,
+        "has_facebook": 0, "last_post_days_ago": 120, "seo_score": 8,
+        "priority": "high", "estimated_value": 1800,
+    },
+    {
+        "name": "Le Gourmet Tunis",
+        "category": "Restaurant Gastronomique",
+        "address": "Avenue Mohamed V, Mutuelle Ville",
+        "phone": "+216 71 345 678",
+        "email": "reservation@legourmet.tn",
+        "google_rating": 4.2, "review_count": 94,
+        "has_website": 1, "website_url": "legourmet-tunis.tn",
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 1, "last_post_days_ago": 60, "seo_score": 32,
+        "priority": "high", "estimated_value": 2500,
+    },
+    {
+        "name": "Café Maure Ennejma Ezzahra",
+        "category": "Café Traditionnel",
+        "address": "Sidi Bou Said, Tunis",
+        "phone": "+216 71 747 000",
+        "email": None,
+        "google_rating": 4.7, "review_count": 521,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@cafemaure_sidibousaid", "instagram_followers": 8100,
+        "has_facebook": 1, "last_post_days_ago": 14, "seo_score": 25,
+        "priority": "medium", "estimated_value": 1500,
+    },
+    {
+        "name": "Burger House Tunis",
+        "category": "Fast Food",
+        "address": "Rue du Lac Biwa, Les Berges du Lac II",
+        "phone": "+216 71 963 741",
+        "email": None,
+        "google_rating": 3.6, "review_count": 201,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@burgerhouse_tn", "instagram_followers": 3200,
+        "has_facebook": 1, "last_post_days_ago": 5, "seo_score": 18,
+        "priority": "high", "estimated_value": 2000,
+    },
+    {
+        "name": "Restaurant El Foundouk",
+        "category": "Restaurant Traditionnel",
+        "address": "Médina, Tunis",
+        "phone": "+216 71 558 888",
+        "email": None,
+        "google_rating": 3.9, "review_count": 33,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 0, "last_post_days_ago": 999, "seo_score": 5,
+        "priority": "urgent", "estimated_value": 3500,
+    },
+    {
+        "name": "Patisserie Masmoudi",
+        "category": "Pâtisserie",
+        "address": "Avenue Farhat Hached, Centre Ville",
+        "phone": "+216 71 242 000",
+        "email": "contact@masmoudi.tn",
+        "google_rating": 4.8, "review_count": 843,
+        "has_website": 1, "website_url": "masmoudi.tn",
+        "has_instagram": 1, "instagram_handle": "@masmoudi_tn", "instagram_followers": 22000,
+        "has_facebook": 1, "last_post_days_ago": 1, "seo_score": 72,
+        "priority": "low", "estimated_value": 500,
+    },
+    {
+        "name": "Taco Loco Tunis",
+        "category": "Restaurant Mexicain",
+        "address": "Rue du Lac Windermere, Lac II",
+        "phone": "+216 71 862 530",
+        "email": None,
+        "google_rating": 4.3, "review_count": 77,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@tacoloco_tn", "instagram_followers": 1100,
+        "has_facebook": 1, "last_post_days_ago": 30, "seo_score": 14,
+        "priority": "medium", "estimated_value": 1600,
+    },
+    {
+        "name": "Chez Slama",
+        "category": "Restaurant Populaire",
+        "address": "Rue Mongi Slim, Bab El Bhar",
+        "phone": "+216 71 332 211",
+        "email": None,
+        "google_rating": 4.5, "review_count": 178,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 1, "last_post_days_ago": 200, "seo_score": 3,
+        "priority": "high", "estimated_value": 2100,
+    },
+    {
+        "name": "Cloud Kitchen Délices",
+        "category": "Dark Kitchen",
+        "address": "Ariana, Grand Tunis",
+        "phone": "+216 55 123 456",
+        "email": "commandes@clouddelices.tn",
+        "google_rating": 3.4, "review_count": 29,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@clouddelices", "instagram_followers": 680,
+        "has_facebook": 1, "last_post_days_ago": 10, "seo_score": 10,
+        "priority": "high", "estimated_value": 1900,
+    },
+    {
+        "name": "Le Pêcheur Gourmet",
+        "category": "Restaurant de Poisson",
+        "address": "Port de La Goulette, Tunis",
+        "phone": "+216 71 735 000",
+        "email": None,
+        "google_rating": 4.1, "review_count": 112,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 1, "last_post_days_ago": 75, "seo_score": 7,
+        "priority": "high", "estimated_value": 2400,
+    },
+    {
+        "name": "Healthy Bowl Tunis",
+        "category": "Restaurant Bio & Healthy",
+        "address": "Rue du Lac Turkana, Les Berges du Lac",
+        "phone": "+216 71 964 852",
+        "email": "hello@healthybowl.tn",
+        "google_rating": 4.6, "review_count": 234,
+        "has_website": 1, "website_url": "healthybowl.tn",
+        "has_instagram": 1, "instagram_handle": "@healthybowl_tn", "instagram_followers": 6700,
+        "has_facebook": 1, "last_post_days_ago": 2, "seo_score": 55,
+        "priority": "low", "estimated_value": 800,
+    },
+    {
+        "name": "Brasserie 1956",
+        "category": "Brasserie",
+        "address": "Avenue de Paris, Centre Ville Tunis",
+        "phone": "+216 71 333 444",
+        "email": None,
+        "google_rating": 3.7, "review_count": 55,
+        "has_website": 1, "website_url": "brasserie1956.tn",
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 0, "last_post_days_ago": 999, "seo_score": 22,
+        "priority": "high", "estimated_value": 2200,
+    },
+    {
+        "name": "Crêperie de Carthage",
+        "category": "Crêperie",
+        "address": "Avenue de Carthage, Salammbô",
+        "phone": "+216 71 720 888",
+        "email": None,
+        "google_rating": 4.3, "review_count": 91,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@creperie_carthage", "instagram_followers": 1350,
+        "has_facebook": 1, "last_post_days_ago": 20, "seo_score": 16,
+        "priority": "medium", "estimated_value": 1700,
+    },
+    {
+        "name": "Kebab Palace",
+        "category": "Fast Food",
+        "address": "Rue de Turquie, Montplaisir",
+        "phone": "+216 71 890 765",
+        "email": None,
+        "google_rating": 3.5, "review_count": 14,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 0, "last_post_days_ago": 999, "seo_score": 0,
+        "priority": "urgent", "estimated_value": 3000,
+    },
+    {
+        "name": "Traiteur El Hana",
+        "category": "Traiteur & Événementiel",
+        "address": "Menzah 6, Tunis",
+        "phone": "+216 71 752 963",
+        "email": "elhana@traiteur.tn",
+        "google_rating": 4.0, "review_count": 48,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@elhana_traiteur", "instagram_followers": 870,
+        "has_facebook": 1, "last_post_days_ago": 35, "seo_score": 11,
+        "priority": "medium", "estimated_value": 1500,
+    },
+]
+
+
+def compute_score_and_services(p):
+    score = 0
+    services = []
+
+    if not p["has_website"]:
+        score += 30
+        services.append("Création de Site Web")
+
+    if p["seo_score"] < 30:
+        score += 20
+        services.append("Référencement SEO")
+    elif p["seo_score"] < 50:
+        score += 10
+        services.append("Référencement SEO")
+
+    if not p["has_instagram"]:
+        score += 20
+        services.append("Gestion des Réseaux Sociaux")
+    elif p["instagram_followers"] < 1000:
+        score += 10
+        if "Gestion des Réseaux Sociaux" not in services:
+            services.append("Gestion des Réseaux Sociaux")
+
+    if p["last_post_days_ago"] > 60:
+        score += 15
+        if "Création de Contenu" not in services:
+            services.append("Création de Contenu")
+    elif p["last_post_days_ago"] > 30:
+        score += 8
+        if "Création de Contenu" not in services:
+            services.append("Création de Contenu")
+
+    if p["review_count"] < 50:
+        score += 10
+        services.append("Publicité Payante (Google Ads)")
+    elif p["google_rating"] < 4.0:
+        score += 5
+        services.append("Gestion de Réputation")
+
+    if not p["has_facebook"] and "Gestion des Réseaux Sociaux" not in services:
+        score += 5
+        services.append("Gestion des Réseaux Sociaux")
+
+    return min(score, 100), list(dict.fromkeys(services))
+
+
+def seed_db():
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM prospects")
+    if c.fetchone()[0] > 0:
+        conn.close()
+        return
+
+    for p in MOCK_PROSPECTS:
+        score, services = compute_score_and_services(p)
+        c.execute("""
+            INSERT INTO prospects (
+                name, category, address, phone, email,
+                google_rating, review_count, has_website, website_url,
+                has_instagram, instagram_handle, instagram_followers,
+                has_facebook, last_post_days_ago, seo_score,
+                status, score, services_needed, priority, estimated_value
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            p["name"], p["category"], p["address"], p["phone"], p["email"],
+            p["google_rating"], p["review_count"], p["has_website"], p.get("website_url"),
+            p["has_instagram"], p.get("instagram_handle"), p["instagram_followers"],
+            p["has_facebook"], p["last_post_days_ago"], p["seo_score"],
+            "new", score, json.dumps(services),
+            p.get("priority", "medium"), p.get("estimated_value", 0)
+        ))
+
+    conn.commit()
+    conn.close()
+    print(f"[DB] Seeded {len(MOCK_PROSPECTS)} mock prospects.")
