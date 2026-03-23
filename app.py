@@ -302,6 +302,119 @@ def pipeline():
     return render_template("pipeline.html", stages_data=stages_data, pipeline_stages=PIPELINE_STAGES)
 
 
+# ─── Marché Tunisie ───────────────────────────────────────────────────────────
+
+@app.route("/marche/tunisie")
+def marche_tunisie():
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='TN' AND status!='archived'")
+    total = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='TN' AND status='closed_won'")
+    won = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='TN' AND status NOT IN ('new','closed_won','closed_lost','archived')")
+    in_pipeline = c.fetchone()[0]
+    c.execute("SELECT COALESCE(SUM(estimated_value),0) FROM prospects WHERE country='TN' AND status='closed_won'")
+    revenue = c.fetchone()[0]
+
+    search   = request.args.get("search", "")
+    status_f = request.args.get("status", "all")
+    sort_by  = request.args.get("sort", "score")
+    priority_f = request.args.get("priority", "all")
+
+    query  = "SELECT * FROM prospects WHERE country='TN' AND status!='archived'"
+    params = []
+    if status_f != "all":
+        query += " AND status=?"; params.append(status_f)
+    if priority_f != "all":
+        query += " AND priority=?"; params.append(priority_f)
+    if search:
+        query += " AND (name LIKE ? OR category LIKE ? OR address LIKE ?)"
+        like = f"%{search}%"; params.extend([like, like, like])
+    order = {"score":"score DESC","rating":"google_rating DESC","name":"name ASC","value":"estimated_value DESC"}.get(sort_by,"score DESC")
+    query += f" ORDER BY {order}"
+
+    c.execute(query, params)
+    prospects = [row_to_dict(r) for r in c.fetchall()]
+    conn.close()
+
+    for p in prospects:
+        p["score_label"], p["score_class"] = get_score_label(p["score"])
+
+    stats = {"total": total, "won": won, "in_pipeline": in_pipeline, "revenue": revenue}
+    return render_template(
+        "marche_tunisie.html",
+        prospects=prospects, stats=stats,
+        pipeline_stages=PIPELINE_STAGES,
+        current_status=status_f, current_sort=sort_by,
+        current_priority=priority_f, search=search,
+        today=date.today().isoformat(),
+    )
+
+
+# ─── Marché France ────────────────────────────────────────────────────────────
+
+@app.route("/marche/france")
+def marche_france():
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND status!='archived'")
+    total = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND status='closed_won'")
+    won = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND status NOT IN ('new','closed_won','closed_lost','archived')")
+    in_pipeline = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND has_digital_menu=0 AND status!='archived'")
+    no_menu = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND has_website=0 AND status!='archived'")
+    no_website = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country='FR' AND has_online_booking=0 AND status!='archived'")
+    no_booking = c.fetchone()[0]
+
+    search   = request.args.get("search", "")
+    status_f = request.args.get("status", "all")
+    city_f   = request.args.get("city", "all")
+    sort_by  = request.args.get("sort", "score")
+
+    # Get distinct cities for filter
+    c.execute("SELECT DISTINCT city FROM prospects WHERE country='FR' AND city!='' ORDER BY city")
+    cities = [r[0] for r in c.fetchall()]
+
+    query  = "SELECT * FROM prospects WHERE country='FR' AND status!='archived'"
+    params = []
+    if status_f != "all":
+        query += " AND status=?"; params.append(status_f)
+    if city_f != "all":
+        query += " AND city=?"; params.append(city_f)
+    if search:
+        query += " AND (name LIKE ? OR category LIKE ? OR city LIKE ?)"
+        like = f"%{search}%"; params.extend([like, like, like])
+    order = {"score":"score DESC","rating":"google_rating DESC","name":"name ASC"}.get(sort_by,"score DESC")
+    query += f" ORDER BY {order}"
+
+    c.execute(query, params)
+    prospects = [row_to_dict(r) for r in c.fetchall()]
+    conn.close()
+
+    for p in prospects:
+        p["score_label"], p["score_class"] = get_score_label(p["score"])
+
+    stats = {
+        "total": total, "won": won, "in_pipeline": in_pipeline,
+        "no_menu": no_menu, "no_website": no_website, "no_booking": no_booking,
+    }
+    return render_template(
+        "marche_france.html",
+        prospects=prospects, stats=stats,
+        pipeline_stages=PIPELINE_STAGES,
+        current_status=status_f, current_sort=sort_by,
+        current_city=city_f, cities=cities, search=search,
+        today=date.today().isoformat(),
+    )
+
+
 # ─── Archive ──────────────────────────────────────────────────────────────────
 
 @app.route("/archive")

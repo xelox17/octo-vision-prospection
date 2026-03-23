@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Marché Tunisie — Octo Vision{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem">
+      <span style="font-size:1.75rem">&#127950;</span>
+      <span class="market-flag-tag tn-tag">TN</span>
+    </div>
+    <h1 class="page-title">Marché Tunisie</h1>
+    <p class="page-sub">Restaurants & Food Businesses — Tunis, Sfax, Sousse, Monastir</p>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('ai_insights') }}" class="btn btn-ai">&#10024; Analyse IA</a>
+    <a href="{{ url_for('pipeline') }}" class="btn btn-secondary">&#8651; Pipeline</a>
+  </div>
+</div>
+
+<!-- Stats Tunisie -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+  <div class="stat-card" style="border-top:3px solid #e70013">
+    <div class="stat-icon-wrap" style="--c:#e70013">&#127919;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.total }}">{{ stats.total }}</span>
+      <span class="stat-label">Prospects actifs</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#f59e0b">&#128293;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.in_pipeline }}">{{ stats.in_pipeline }}</span>
+      <span class="stat-label">En pipeline</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#10b981">&#10003;</div>
+    <div class="stat-body">
+      <span class="stat-value" data-target="{{ stats.won }}">{{ stats.won }}</span>
+      <span class="stat-label">Clients gagnés</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon-wrap" style="--c:#8b5cf6">TND</div>
+    <div class="stat-body">
+      <span class="stat-value">{{ "{:,}".format(stats.revenue) }}</span>
+      <span class="stat-label">Revenus TND/mois</span>
+    </div>
+  </div>
+</div>
+
+<!-- Services pitch banner -->
+<div class="market-banner tn-banner">
+  <div class="market-banner-services">
+    <div class="market-service-tag">&#127760; Création de site web</div>
+    <div class="market-service-tag">&#128269; Référencement SEO</div>
+    <div class="market-service-tag">&#128241; Réseaux Sociaux</div>
+    <div class="market-service-tag">&#127912; Création de Contenu</div>
+    <div class="market-service-tag">&#128176; Google Ads</div>
+  </div>
+  <div class="market-banner-text">
+    <strong>Stratégie Tunisie :</strong> Cibler les restaurants sans site web ni présence Instagram. ROI moyen : 2800 TND/mois par client.
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+  <form method="get" style="display:contents">
+    <input type="text" name="search" placeholder="Rechercher..." value="{{ search }}"
+      class="search-input" oninput="debounce(this)" id="searchInput" />
+    <select name="status" class="filter-select" onchange="this.form.submit()">
+      <option value="all" {% if current_status=='all' %}selected{% endif %}>Tous statuts</option>
+      {% for key,label,color in pipeline_stages %}
+      <option value="{{ key }}" {% if current_status==key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="priority" class="filter-select" onchange="this.form.submit()">
+      <option value="all" {% if current_priority=='all' %}selected{% endif %}>Toutes priorités</option>
+      <option value="urgent" {% if current_priority=='urgent' %}selected{% endif %}>🔴 Urgent</option>
+      <option value="high"   {% if current_priority=='high'   %}selected{% endif %}>🟠 Élevée</option>
+      <option value="medium" {% if current_priority=='medium' %}selected{% endif %}>🔵 Normale</option>
+      <option value="low"    {% if current_priority=='low'    %}selected{% endif %}>⚫ Faible</option>
+    </select>
+    <select name="sort" class="filter-select" onchange="this.form.submit()">
+      <option value="score"  {% if current_sort=='score'  %}selected{% endif %}>Trier : Score</option>
+      <option value="rating" {% if current_sort=='rating' %}selected{% endif %}>Trier : Note</option>
+      <option value="value"  {% if current_sort=='value'  %}selected{% endif %}>Trier : Valeur</option>
+      <option value="name"   {% if current_sort=='name'   %}selected{% endif %}>Trier : Nom</option>
+    </select>
+  </form>
+  <span class="results-count">{{ prospects|length }} résultat(s)</span>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Prospects Tunisie</h2>
+    <span class="card-badge">{{ prospects|length }} établissements</span>
+  </div>
+  <div class="table-wrapper">
+    <table class="prospects-table">
+      <thead>
+        <tr>
+          <th>Établissement</th>
+          <th>Catégorie</th>
+          <th>Prio</th>
+          <th>Score</th>
+          <th>Google</th>
+          <th>Site Web</th>
+          <th>Instagram</th>
+          <th>SEO</th>
+          <th>Valeur TND</th>
+          <th>Statut</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in prospects %}
+        <tr class="prospect-row" onclick="window.location='/prospect/{{ p.id }}'">
+          <td>
+            <div class="prospect-name-cell">
+              <span class="prospect-name">{{ p.name }}</span>
+              <span class="prospect-address">{{ p.address }}</span>
+            </div>
+          </td>
+          <td><span class="category-badge">{{ p.category }}</span></td>
+          <td><span class="priority-dot priority-{{ p.priority or 'medium' }}"></span></td>
+          <td>
+            <div class="score-cell">
+              <div class="score-bar-wrap">
+                <div class="score-bar score-{{ p.score_class }}" style="width:{{ p.score }}%"></div>
+              </div>
+              <span class="score-num score-{{ p.score_class }}">{{ p.score }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="google-cell">
+              <span class="star">&#9733;</span> {{ p.google_rating }}
+              <span class="review-count">({{ p.review_count }})</span>
+            </div>
+          </td>
+          <td>
+            {% if p.has_website %}<span class="check yes">&#10003;</span>
+            {% else %}<span class="check no">&#10007;</span>{% endif %}
+          </td>
+          <td>
+            {% if p.has_instagram %}<span class="check yes">&#10003;</span> <span class="followers">{{ "{:,}".format(p.instagram_followers) }}</span>
+            {% else %}<span class="check no">&#10007;</span>{% endif %}
+          </td>
+          <td>
+            <span class="seo-pill {% if p.seo_score >= 50 %}seo-good{% elif p.seo_score >= 25 %}seo-med{% else %}seo-bad{% endif %}">
+              {{ p.seo_score }}
+            </span>
+          </td>
+          <td><span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }}</span></td>
+          <td>
+            <span class="status-badge status-{{ p.status }}">
+              {% for key,label,color in pipeline_stages %}{% if key==p.status %}{{ label }}{% endif %}{% endfor %}
+            </span>
+          </td>
+          <td onclick="event.stopPropagation()">
+            <div class="action-group" style="justify-content:flex-end">
+              <a href="/prospect/{{ p.id }}" class="action-btn" title="Profil">&#128065;</a>
+              <a href="/prospect/{{ p.id }}/activity" class="action-btn" title="Activité">&#128196;</a>
+              <a href="/prospect/{{ p.id }}/outreach" class="action-btn action-btn-green" title="Message">&#9993;</a>
+              <a href="/prospect/{{ p.id }}/ai-analysis" class="action-btn action-btn-ai" title="IA">&#10024;</a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="11" class="empty-state"><div class="empty-icon">&#128269;</div><p>Aucun prospect trouvé</p></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let t;
+function debounce(el) { clearTimeout(t); t = setTimeout(()=>el.form.submit(), 500); }
+</script>
+{% endblock %}

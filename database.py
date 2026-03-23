@@ -47,10 +47,15 @@ def init_db():
 
     # Migrate: add new columns to existing DB gracefully
     migrations = [
-        ("priority", "TEXT DEFAULT 'medium'"),
-        ("estimated_value", "INTEGER DEFAULT 0"),
-        ("next_follow_up", "TEXT DEFAULT ''"),
-        ("last_contact_date", "TEXT DEFAULT ''"),
+        ("priority",           "TEXT DEFAULT 'medium'"),
+        ("estimated_value",    "INTEGER DEFAULT 0"),
+        ("next_follow_up",     "TEXT DEFAULT ''"),
+        ("last_contact_date",  "TEXT DEFAULT ''"),
+        ("country",            "TEXT DEFAULT 'TN'"),
+        ("has_digital_menu",   "INTEGER DEFAULT 0"),
+        ("has_online_booking", "INTEGER DEFAULT 0"),
+        ("has_qr_menu",        "INTEGER DEFAULT 0"),
+        ("city",               "TEXT DEFAULT ''"),
     ]
     for col_name, col_def in migrations:
         try:
@@ -393,34 +398,354 @@ def compute_score_and_services(p):
     return min(score, 100), list(dict.fromkeys(services))
 
 
+def compute_france_score_and_services(p):
+    """Scoring spécifique France : focus menu digital, site vitrine, réservation en ligne."""
+    score = 0
+    services = []
+
+    if not p.get("has_website"):
+        score += 30
+        services.append("Site Vitrine Restaurant")
+
+    if not p.get("has_digital_menu"):
+        score += 30
+        services.append("Menu Digital QR Code")
+
+    if not p.get("has_online_booking"):
+        score += 20
+        services.append("Réservation en Ligne")
+
+    if not p.get("has_instagram"):
+        score += 10
+        services.append("Gestion des Réseaux Sociaux")
+    elif p.get("instagram_followers", 0) < 500:
+        score += 5
+        if "Gestion des Réseaux Sociaux" not in services:
+            services.append("Gestion des Réseaux Sociaux")
+
+    if p.get("review_count", 0) < 50:
+        score += 5
+        services.append("Optimisation Google My Business")
+    if p.get("google_rating", 5) < 4.0:
+        score += 5
+        if "Optimisation Google My Business" not in services:
+            services.append("Optimisation Google My Business")
+
+    if p.get("seo_score", 0) < 30:
+        score += 5
+        services.append("Référencement SEO Local")
+
+    return min(score, 100), list(dict.fromkeys(services))
+
+
+MOCK_FRANCE = [
+    {
+        "name": "Le Bistrot du Marché",
+        "category": "Bistrot Français",
+        "city": "Paris 11e",
+        "address": "23 Rue de la Roquette, Paris 11e",
+        "phone": "+33 1 43 55 12 34",
+        "email": None,
+        "google_rating": 4.2, "review_count": 87,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@bistrotdumarche", "instagram_followers": 430,
+        "has_facebook": 1, "last_post_days_ago": 25, "seo_score": 12,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "urgent", "estimated_value": 149,
+    },
+    {
+        "name": "Chez Michel",
+        "category": "Restaurant Traditionnel",
+        "city": "Lyon 1er",
+        "address": "8 Rue Pizay, Lyon 1er",
+        "phone": "+33 4 78 28 11 47",
+        "email": None,
+        "google_rating": 4.5, "review_count": 312,
+        "has_website": 1, "website_url": "chezmichel-lyon.fr",
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 1, "last_post_days_ago": 90, "seo_score": 28,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "high", "estimated_value": 99,
+    },
+    {
+        "name": "La Table de Provence",
+        "category": "Restaurant Provençal",
+        "city": "Marseille 6e",
+        "address": "14 Cours Julien, Marseille 6e",
+        "phone": "+33 4 91 48 22 10",
+        "email": "contact@tabledefrovence.fr",
+        "google_rating": 4.0, "review_count": 156,
+        "has_website": 1, "website_url": "tabledefrovence.fr",
+        "has_instagram": 1, "instagram_handle": "@tabledeprovence", "instagram_followers": 820,
+        "has_facebook": 1, "last_post_days_ago": 12, "seo_score": 41,
+        "has_digital_menu": 0, "has_online_booking": 1, "has_qr_menu": 0,
+        "priority": "high", "estimated_value": 79,
+    },
+    {
+        "name": "Brasserie des Capucins",
+        "category": "Brasserie",
+        "city": "Bordeaux Centre",
+        "address": "Place des Capucins, Bordeaux",
+        "phone": "+33 5 56 91 33 44",
+        "email": None,
+        "google_rating": 3.7, "review_count": 43,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 0, "last_post_days_ago": 999, "seo_score": 5,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "urgent", "estimated_value": 149,
+    },
+    {
+        "name": "Le Comptoir Niçois",
+        "category": "Restaurant Méditerranéen",
+        "city": "Nice Vieux-Ville",
+        "address": "12 Cours Saleya, Nice",
+        "phone": "+33 4 93 85 71 22",
+        "email": "info@comptoirnicois.fr",
+        "google_rating": 4.6, "review_count": 521,
+        "has_website": 1, "website_url": "comptoirnicois.fr",
+        "has_instagram": 1, "instagram_handle": "@comptoirnicois", "instagram_followers": 2800,
+        "has_facebook": 1, "last_post_days_ago": 3, "seo_score": 55,
+        "has_digital_menu": 0, "has_online_booking": 1, "has_qr_menu": 0,
+        "priority": "medium", "estimated_value": 79,
+    },
+    {
+        "name": "Pizzeria Napolitana",
+        "category": "Pizzeria",
+        "city": "Toulouse Capitole",
+        "address": "7 Rue Saint-Rome, Toulouse",
+        "phone": "+33 5 61 21 88 50",
+        "email": None,
+        "google_rating": 4.3, "review_count": 198,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@pizzanapolitana_tlse", "instagram_followers": 670,
+        "has_facebook": 1, "last_post_days_ago": 8, "seo_score": 14,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "urgent", "estimated_value": 149,
+    },
+    {
+        "name": "Au Crocodile",
+        "category": "Restaurant Gastronomique",
+        "city": "Strasbourg Centre",
+        "address": "10 Rue de l'Outre, Strasbourg",
+        "phone": "+33 3 88 32 13 02",
+        "email": "reservation@aucrocodile.fr",
+        "google_rating": 4.7, "review_count": 445,
+        "has_website": 1, "website_url": "aucrocodile.fr",
+        "has_instagram": 1, "instagram_handle": "@aucrocodile", "instagram_followers": 3200,
+        "has_facebook": 1, "last_post_days_ago": 5, "seo_score": 62,
+        "has_digital_menu": 1, "has_online_booking": 1, "has_qr_menu": 0,
+        "priority": "low", "estimated_value": 49,
+    },
+    {
+        "name": "La Crêperie Bretonne",
+        "category": "Crêperie",
+        "city": "Nantes Centre",
+        "address": "3 Rue de la Juiverie, Nantes",
+        "phone": "+33 2 40 47 22 11",
+        "email": None,
+        "google_rating": 4.4, "review_count": 267,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@creperie_bretonne_nantes", "instagram_followers": 1100,
+        "has_facebook": 1, "last_post_days_ago": 15, "seo_score": 18,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "high", "estimated_value": 149,
+    },
+    {
+        "name": "L'Estaminet du Vieux-Lille",
+        "category": "Estaminet Flamand",
+        "city": "Lille Vieux-Lille",
+        "address": "60 Rue de Gand, Lille",
+        "phone": "+33 3 20 15 01 59",
+        "email": None,
+        "google_rating": 4.1, "review_count": 78,
+        "has_website": 1, "website_url": "estaminetlille.fr",
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 1, "last_post_days_ago": 120, "seo_score": 22,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "high", "estimated_value": 99,
+    },
+    {
+        "name": "Sushi Fusion Montpellier",
+        "category": "Restaurant Japonais",
+        "city": "Montpellier",
+        "address": "8 Place de la Comédie, Montpellier",
+        "phone": "+33 4 67 60 44 10",
+        "email": "hello@sushifusion34.fr",
+        "google_rating": 4.2, "review_count": 134,
+        "has_website": 1, "website_url": "sushifusion34.fr",
+        "has_instagram": 1, "instagram_handle": "@sushifusion_mtp", "instagram_followers": 1650,
+        "has_facebook": 1, "last_post_days_ago": 7, "seo_score": 38,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "high", "estimated_value": 99,
+    },
+    {
+        "name": "Le Petit Rennes",
+        "category": "Bistrot",
+        "city": "Rennes Centre",
+        "address": "19 Rue Saint-Michel, Rennes",
+        "phone": "+33 2 99 79 44 32",
+        "email": None,
+        "google_rating": 3.8, "review_count": 32,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 0, "last_post_days_ago": 999, "seo_score": 0,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "urgent", "estimated_value": 149,
+    },
+    {
+        "name": "Brasserie Georges",
+        "category": "Grande Brasserie",
+        "city": "Lyon 2e",
+        "address": "30 Cours de Verdun, Lyon 2e",
+        "phone": "+33 4 72 56 54 54",
+        "email": "contact@brasseriegeorges.com",
+        "google_rating": 4.3, "review_count": 1240,
+        "has_website": 1, "website_url": "brasseriegeorges.com",
+        "has_instagram": 1, "instagram_handle": "@brasseriegeorges", "instagram_followers": 8900,
+        "has_facebook": 1, "last_post_days_ago": 2, "seo_score": 71,
+        "has_digital_menu": 1, "has_online_booking": 1, "has_qr_menu": 1,
+        "priority": "low", "estimated_value": 49,
+    },
+    {
+        "name": "Le Jardin d'en Face",
+        "category": "Restaurant Bistronomique",
+        "city": "Paris 5e",
+        "address": "12 Rue de Buci, Paris 6e",
+        "phone": "+33 1 43 26 19 02",
+        "email": None,
+        "google_rating": 4.0, "review_count": 56,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@jardindface", "instagram_followers": 290,
+        "has_facebook": 0, "last_post_days_ago": 60, "seo_score": 9,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "urgent", "estimated_value": 149,
+    },
+    {
+        "name": "La Pataterie Grenoble",
+        "category": "Restaurant Convivial",
+        "city": "Grenoble",
+        "address": "11 Rue Chenoise, Grenoble",
+        "phone": "+33 4 76 43 20 11",
+        "email": None,
+        "google_rating": 3.9, "review_count": 91,
+        "has_website": 1, "website_url": "lapataterie38.fr",
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 1, "last_post_days_ago": 180, "seo_score": 17,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "high", "estimated_value": 99,
+    },
+    {
+        "name": "Le Pub Saint-Germain",
+        "category": "Bar & Restaurant",
+        "city": "Paris 6e",
+        "address": "17 Rue de l'Ancienne Comédie, Paris 6e",
+        "phone": "+33 1 56 81 18 18",
+        "email": "pub@saintgermain.fr",
+        "google_rating": 4.1, "review_count": 223,
+        "has_website": 1, "website_url": "pubsaintgermain.fr",
+        "has_instagram": 1, "instagram_handle": "@pubsaintgermain", "instagram_followers": 1800,
+        "has_facebook": 1, "last_post_days_ago": 10, "seo_score": 44,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "medium", "estimated_value": 99,
+    },
+    {
+        "name": "Trattoria Roma",
+        "category": "Restaurant Italien",
+        "city": "Aix-en-Provence",
+        "address": "3 Rue des Cordeliers, Aix-en-Provence",
+        "phone": "+33 4 42 27 90 12",
+        "email": None,
+        "google_rating": 4.4, "review_count": 178,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 1, "instagram_handle": "@trattoriaroma_aix", "instagram_followers": 760,
+        "has_facebook": 1, "last_post_days_ago": 20, "seo_score": 11,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "high", "estimated_value": 149,
+    },
+    {
+        "name": "Le Relais de Bourgogne",
+        "category": "Restaurant Bourguignon",
+        "city": "Dijon Centre",
+        "address": "18 Rue Bannelier, Dijon",
+        "phone": "+33 3 80 30 21 00",
+        "email": None,
+        "google_rating": 4.6, "review_count": 302,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 1, "last_post_days_ago": 45, "seo_score": 8,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "urgent", "estimated_value": 149,
+    },
+    {
+        "name": "Kebab & Grill du Centre",
+        "category": "Fast Food",
+        "city": "Clermont-Ferrand",
+        "address": "22 Place de Jaude, Clermont-Ferrand",
+        "phone": "+33 4 73 36 00 80",
+        "email": None,
+        "google_rating": 3.6, "review_count": 41,
+        "has_website": 0, "website_url": None,
+        "has_instagram": 0, "instagram_handle": None, "instagram_followers": 0,
+        "has_facebook": 0, "last_post_days_ago": 999, "seo_score": 0,
+        "has_digital_menu": 0, "has_online_booking": 0, "has_qr_menu": 0,
+        "priority": "urgent", "estimated_value": 79,
+    },
+]
+
+
 def seed_db():
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT COUNT(*) FROM prospects")
-    if c.fetchone()[0] > 0:
-        conn.close()
-        return
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country = 'TN'")
+    if c.fetchone()[0] == 0:
+        for p in MOCK_PROSPECTS:
+            score, services = compute_score_and_services(p)
+            c.execute("""
+                INSERT INTO prospects (
+                    name, category, address, phone, email,
+                    google_rating, review_count, has_website, website_url,
+                    has_instagram, instagram_handle, instagram_followers,
+                    has_facebook, last_post_days_ago, seo_score,
+                    status, score, services_needed, priority, estimated_value,
+                    country, city
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                p["name"], p["category"], p["address"], p["phone"], p["email"],
+                p["google_rating"], p["review_count"], p["has_website"], p.get("website_url"),
+                p["has_instagram"], p.get("instagram_handle"), p["instagram_followers"],
+                p["has_facebook"], p["last_post_days_ago"], p["seo_score"],
+                "new", score, json.dumps(services),
+                p.get("priority", "medium"), p.get("estimated_value", 0),
+                "TN", p.get("city", "Tunis")
+            ))
+        print(f"[DB] Seeded {len(MOCK_PROSPECTS)} Tunisian prospects.")
 
-    for p in MOCK_PROSPECTS:
-        score, services = compute_score_and_services(p)
-        c.execute("""
-            INSERT INTO prospects (
-                name, category, address, phone, email,
-                google_rating, review_count, has_website, website_url,
-                has_instagram, instagram_handle, instagram_followers,
-                has_facebook, last_post_days_ago, seo_score,
-                status, score, services_needed, priority, estimated_value
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            p["name"], p["category"], p["address"], p["phone"], p["email"],
-            p["google_rating"], p["review_count"], p["has_website"], p.get("website_url"),
-            p["has_instagram"], p.get("instagram_handle"), p["instagram_followers"],
-            p["has_facebook"], p["last_post_days_ago"], p["seo_score"],
-            "new", score, json.dumps(services),
-            p.get("priority", "medium"), p.get("estimated_value", 0)
-        ))
+    c.execute("SELECT COUNT(*) FROM prospects WHERE country = 'FR'")
+    if c.fetchone()[0] == 0:
+        for p in MOCK_FRANCE:
+            score, services = compute_france_score_and_services(p)
+            c.execute("""
+                INSERT INTO prospects (
+                    name, category, address, phone, email,
+                    google_rating, review_count, has_website, website_url,
+                    has_instagram, instagram_handle, instagram_followers,
+                    has_facebook, last_post_days_ago, seo_score,
+                    status, score, services_needed, priority, estimated_value,
+                    country, city, has_digital_menu, has_online_booking, has_qr_menu
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                p["name"], p["category"], p["address"], p["phone"], p["email"],
+                p["google_rating"], p["review_count"], p["has_website"], p.get("website_url"),
+                p["has_instagram"], p.get("instagram_handle"), p["instagram_followers"],
+                p["has_facebook"], p["last_post_days_ago"], p["seo_score"],
+                "new", score, json.dumps(services),
+                p.get("priority", "medium"), p.get("estimated_value", 0),
+                "FR", p.get("city", ""),
+                p.get("has_digital_menu", 0), p.get("has_online_booking", 0), p.get("has_qr_menu", 0)
+            ))
+        print(f"[DB] Seeded {len(MOCK_FRANCE)} French prospects.")
 
     conn.commit()
     conn.close()
-    print(f"[DB] Seeded {len(MOCK_PROSPECTS)} mock prospects.")

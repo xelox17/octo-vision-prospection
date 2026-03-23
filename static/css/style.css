@@ -800,6 +800,63 @@ input, select, textarea { font-family: inherit; }
 .ai-status-badge .ai-dot { animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
 
+/* ── Market pages ───────────────────────────────────── */
+.nav-country-tag {
+  margin-left: auto; font-size: .6rem; font-weight: 800;
+  padding: .1rem .4rem; border-radius: 4px; letter-spacing: .03em;
+}
+.nav-country-tag.tn { background: #e7001320; color: #e70013; border: 1px solid #e7001340; }
+.nav-country-tag.fr { background: #002395 20; color: #4a7fd4;  border: 1px solid #00239540; }
+
+.market-flag-tag {
+  font-size: .75rem; font-weight: 800; padding: .25rem .7rem;
+  border-radius: 6px; letter-spacing: .05em;
+}
+.tn-tag { background: #e7001315; color: #e70013; border: 1px solid #e7001340; }
+.fr-tag { background: #00239515; color: #4a7fd4;  border: 1px solid #00239540; }
+
+.market-banner {
+  display: flex; align-items: center; gap: 1.5rem;
+  padding: 1.25rem 1.5rem; border-radius: var(--r);
+  margin-bottom: 1.75rem; flex-wrap: wrap;
+}
+.tn-banner { background: linear-gradient(135deg, rgba(231,0,19,.06), rgba(231,0,19,.02)); border: 1px solid rgba(231,0,19,.2); }
+.fr-banner { background: linear-gradient(135deg, rgba(0,35,149,.06), rgba(237,41,57,.03)); border: 1px solid rgba(0,35,149,.2); }
+.market-banner-left { flex: 1; min-width: 200px; }
+.market-banner-title { font-weight: 700; font-size: .95rem; margin-bottom: .4rem; }
+.market-banner-desc  { font-size: .8rem; color: var(--text-sec); line-height: 1.5; }
+.market-banner-text  { font-size: .8rem; color: var(--text-sec); line-height: 1.5; flex: 1; }
+.market-banner-services { display: flex; gap: .5rem; flex-wrap: wrap; flex-shrink: 0; }
+.market-service-tag {
+  font-size: .72rem; font-weight: 600;
+  padding: .3rem .7rem; border-radius: 20px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  color: var(--text-sec); white-space: nowrap;
+}
+.fr-tag-service { background: rgba(0,35,149,.1); color: #4a7fd4; border-color: rgba(0,35,149,.25); }
+
+/* Feature tags (menu digital, réservation, QR) */
+.feature-tag {
+  display: inline-flex; align-items: center; gap: .25rem;
+  font-size: .7rem; font-weight: 700; padding: .2rem .55rem;
+  border-radius: 20px; white-space: nowrap;
+}
+.feature-yes { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+.feature-no  { background: rgba(239,68,68,.12);  color: var(--red);   border: 1px solid rgba(239,68,68,.3); }
+
+.city-badge {
+  font-size: .72rem; font-weight: 600; color: var(--text-sec);
+  background: var(--bg-input); border: 1px solid var(--border);
+  padding: .2rem .55rem; border-radius: 20px; white-space: nowrap;
+}
+
+/* France legend */
+.france-legend-card { background: var(--bg-card); }
+.fr-legend-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; }
+.fr-legend-item { display: flex; align-items: flex-start; gap: .75rem; }
+.fr-legend-item strong { font-size: .82rem; display: block; margin-bottom: .2rem; }
+.fr-legend-item p { font-size: .75rem; color: var(--text-muted); line-height: 1.4; }
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 1400px) {
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
