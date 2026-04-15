@@ -1,9 +1,16 @@
+import os
 import sqlite3
 import json
 import hashlib
 from datetime import datetime, date
 
 DB_PATH = "prospection.db"
+
+# ── PostgreSQL / SQLite detection ─────────────────────────────────────────────
+_DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if _DATABASE_URL.startswith("postgres://"):          # Render gives postgres:// but psycopg2 needs postgresql://
+    _DATABASE_URL = _DATABASE_URL.replace("postgres://", "postgresql://", 1)
+USE_PG = bool(_DATABASE_URL)
 
 
 def hash_password(password):
@@ -14,19 +21,61 @@ def check_password(password, hashed):
     return hash_password(password) == hashed
 
 
+# ── Thin DB wrapper (normalises sqlite3 ↔ psycopg2) ──────────────────────────
+
+class _Cursor:
+    """Adapts ? → %s for PostgreSQL and normalises row access."""
+    def __init__(self, cur, pg=False):
+        self._c = cur
+        self._pg = pg
+
+    def execute(self, sql, params=None):
+        if self._pg:
+            sql = sql.replace("?", "%s")
+        self._c.execute(sql, params) if params is not None else self._c.execute(sql)
+        return self
+
+    def fetchone(self):  return self._c.fetchone()
+    def fetchall(self):  return self._c.fetchall()
+
+
+class _Conn:
+    def __init__(self, conn, pg=False):
+        self._conn = conn
+        self._pg   = pg
+
+    def cursor(self):   return _Cursor(self._conn.cursor(), self._pg)
+    def commit(self):   self._conn.commit()
+    def close(self):    self._conn.close()
+
+
 def get_db():
+    if USE_PG:
+        import psycopg2, psycopg2.extras
+        conn = psycopg2.connect(_DATABASE_URL, cursor_factory=psycopg2.extras.DictCursor)
+        return _Conn(conn, pg=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+    return _Conn(conn, pg=False)
 
 
 def init_db():
-    conn = get_db()
-    c = conn.cursor()
+    if USE_PG:
+        import psycopg2, psycopg2.extras
+        raw = psycopg2.connect(_DATABASE_URL, cursor_factory=psycopg2.extras.DictCursor)
+        raw.autocommit = True          # DDL doesn't need explicit transactions
+        conn = _Conn(raw, pg=True)
+    else:
+        raw = sqlite3.connect(DB_PATH)
+        raw.row_factory = sqlite3.Row
+        conn = _Conn(raw, pg=False)
 
-    c.execute("""
+    c = conn.cursor()
+    ID = "SERIAL PRIMARY KEY" if USE_PG else "INTEGER PRIMARY KEY AUTOINCREMENT"
+
+    c.execute(f"""
         CREATE TABLE IF NOT EXISTS prospects (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {ID},
             name TEXT NOT NULL,
             category TEXT NOT NULL,
             address TEXT NOT NULL,
@@ -54,31 +103,34 @@ def init_db():
         )
     """)
 
-    # Migrate: add new columns to existing DB gracefully
+    # Migrations — safe on both engines
     migrations = [
-        ("priority",           "TEXT DEFAULT 'medium'"),
-        ("estimated_value",    "INTEGER DEFAULT 0"),
-        ("next_follow_up",     "TEXT DEFAULT ''"),
-        ("last_contact_date",  "TEXT DEFAULT ''"),
-        ("country",              "TEXT DEFAULT 'TN'"),
-        ("has_digital_menu",     "INTEGER DEFAULT 0"),
-        ("has_online_booking",   "INTEGER DEFAULT 0"),
-        ("has_qr_menu",          "INTEGER DEFAULT 0"),
-        ("city",                 "TEXT DEFAULT ''"),
-        ("has_modern_menu",      "INTEGER DEFAULT 0"),
-        ("has_pro_logo",         "INTEGER DEFAULT 0"),
-        ("has_gmaps_photos",     "INTEGER DEFAULT 0"),
-        ("menu_board_quality",   "TEXT DEFAULT 'unknown'"),
+        ("priority",          "TEXT DEFAULT 'medium'"),
+        ("estimated_value",   "INTEGER DEFAULT 0"),
+        ("next_follow_up",    "TEXT DEFAULT ''"),
+        ("last_contact_date", "TEXT DEFAULT ''"),
+        ("country",           "TEXT DEFAULT 'TN'"),
+        ("has_digital_menu",  "INTEGER DEFAULT 0"),
+        ("has_online_booking","INTEGER DEFAULT 0"),
+        ("has_qr_menu",       "INTEGER DEFAULT 0"),
+        ("city",              "TEXT DEFAULT ''"),
+        ("has_modern_menu",   "INTEGER DEFAULT 0"),
+        ("has_pro_logo",      "INTEGER DEFAULT 0"),
+        ("has_gmaps_photos",  "INTEGER DEFAULT 0"),
+        ("menu_board_quality","TEXT DEFAULT 'unknown'"),
     ]
-    for col_name, col_def in migrations:
-        try:
-            c.execute(f"ALTER TABLE prospects ADD COLUMN {col_name} {col_def}")
-        except sqlite3.OperationalError:
-            pass
+    for col, defn in migrations:
+        if USE_PG:
+            c.execute(f"ALTER TABLE prospects ADD COLUMN IF NOT EXISTS {col} {defn}")
+        else:
+            try:
+                c.execute(f"ALTER TABLE prospects ADD COLUMN {col} {defn}")
+            except sqlite3.OperationalError:
+                pass
 
-    c.execute("""
+    c.execute(f"""
         CREATE TABLE IF NOT EXISTS interactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {ID},
             prospect_id INTEGER NOT NULL,
             type TEXT NOT NULL DEFAULT 'note',
             interaction_date TEXT NOT NULL,
@@ -93,9 +145,9 @@ def init_db():
         )
     """)
 
-    c.execute("""
+    c.execute(f"""
         CREATE TABLE IF NOT EXISTS pipeline_notes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {ID},
             prospect_id INTEGER,
             note TEXT,
             status_change TEXT,
@@ -104,9 +156,9 @@ def init_db():
         )
     """)
 
-    c.execute("""
+    c.execute(f"""
         CREATE TABLE IF NOT EXISTS outreach_messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {ID},
             prospect_id INTEGER,
             message_type TEXT,
             subject TEXT,
@@ -116,9 +168,9 @@ def init_db():
         )
     """)
 
-    c.execute("""
+    c.execute(f"""
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {ID},
             username TEXT UNIQUE NOT NULL,
             full_name TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'commercial',
@@ -127,17 +179,18 @@ def init_db():
         )
     """)
 
-    # Seed default users if not exist
+    # Seed default users
     c.execute("SELECT COUNT(*) FROM users")
     if c.fetchone()[0] == 0:
         c.execute("INSERT INTO users (username, full_name, role, password_hash) VALUES (?, ?, ?, ?)",
                   ("admin", "Admin — Octo Vision", "admin", hash_password("octo2024")))
         c.execute("INSERT INTO users (username, full_name, role, password_hash) VALUES (?, ?, ?, ?)",
                   ("ayoub", "Ayoub Abid", "commercial", hash_password("ayoub2024")))
-        print("[Auth] Utilisateurs créés : admin / ayoub")
+        print("[Auth] Utilisateurs crees : admin / ayoub")
 
-    conn.commit()
-    conn.close()
+    if not USE_PG:
+        raw.commit()
+    raw.close()
 
 
 MOCK_PROSPECTS = [

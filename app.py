@@ -238,7 +238,7 @@ def _dashboard_admin():
     revenue_eur = c.fetchone()[0]
     c.execute("SELECT COUNT(*) FROM prospects WHERE status='archived'")
     archived_count = c.fetchone()[0]
-    c.execute("SELECT COUNT(*) FROM prospects WHERE next_follow_up != '' AND next_follow_up <= date('now') AND status NOT IN ('closed_won','closed_lost','archived')")
+    c.execute("SELECT COUNT(*) FROM prospects WHERE next_follow_up != '' AND next_follow_up <= ? AND status NOT IN ('closed_won','closed_lost','archived')", (date.today().isoformat(),))
     overdue = c.fetchone()[0]
     c.execute("SELECT COALESCE(SUM(estimated_value),0) FROM prospects WHERE status NOT IN ('new','closed_won','closed_lost','archived')")
     pipeline_value = c.fetchone()[0]
