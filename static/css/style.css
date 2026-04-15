@@ -891,6 +891,44 @@ input, select, textarea { font-family: inherit; }
 .fr-legend-item strong { font-size: .82rem; display: block; margin-bottom: .2rem; }
 .fr-legend-item p { font-size: .75rem; color: var(--text-muted); line-height: 1.4; }
 
+/* ── Notification badge (overdue alert) ─────────────── */
+.nav-badge-alert {
+  margin-left: auto;
+  background: #ef4444;
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  padding: 0 5px;
+  border-radius: 20px;
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .6; }
+}
+
+/* ── Export button ───────────────────────────────────── */
+.btn-export {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .45rem .9rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: .8rem; font-weight: 600;
+  color: var(--text-sec);
+  text-decoration: none;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.btn-export:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
 /* ── Charts ─────────────────────────────────────────── */
 .charts-grid {
   display: grid;

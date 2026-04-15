@@ -12,6 +12,7 @@
     <p class="page-sub">Menu Digital · QR Code · Site Vitrine — Paris, Lyon, Marseille et toute la France</p>
   </div>
   <div class="header-actions">
+    <a href="{{ url_for('export_csv', country='FR') }}" class="btn-export">&#8595; Export CSV</a>
     <a href="{{ url_for('ai_insights') }}" class="btn btn-ai">&#10024; Analyse IA</a>
     <a href="{{ url_for('pipeline') }}" class="btn btn-secondary">&#8651; Pipeline</a>
   </div>

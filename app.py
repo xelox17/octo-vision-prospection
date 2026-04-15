@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, Response
+import csv
+import io
 import json
 import os
 import sqlite3
@@ -45,8 +47,22 @@ def get_current_user():
 
 @app.context_processor
 def inject_user():
-    """Injecte current_user dans tous les templates automatiquement."""
-    return {"current_user": get_current_user()}
+    """Injecte current_user + overdue_count dans tous les templates automatiquement."""
+    user = get_current_user()
+    overdue_count = 0
+    if user:
+        try:
+            conn = get_db()
+            c = conn.cursor()
+            c.execute(
+                "SELECT COUNT(*) FROM prospects WHERE next_follow_up != '' AND next_follow_up <= ? AND status NOT IN ('closed_won','closed_lost','archived')",
+                (date.today().isoformat(),)
+            )
+            overdue_count = c.fetchone()[0]
+            conn.close()
+        except Exception:
+            pass
+    return {"current_user": user, "overdue_count": overdue_count}
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -905,6 +921,58 @@ def ai_analyze(pid):
         "model": "Claude API (non connecté — aperçu)",
     }
     return jsonify(analysis)
+
+
+# ─── Export CSV ───────────────────────────────────────────────────────────────
+
+@app.route("/export/csv")
+@login_required
+def export_csv():
+    country = request.args.get("country", "all")  # TN, FR, or all
+
+    conn = get_db()
+    c = conn.cursor()
+    query = "SELECT * FROM prospects WHERE status != 'archived'"
+    params = []
+    if country in ("TN", "FR"):
+        query += " AND country = ?"
+        params.append(country)
+    query += " ORDER BY score DESC"
+    c.execute(query, params)
+    rows = [row_to_dict(r) for r in c.fetchall()]
+    conn.close()
+
+    def gen():
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        # Header
+        writer.writerow([
+            "ID", "Nom", "Catégorie", "Ville", "Pays", "Statut", "Score",
+            "Priorité", "Note Google", "Nb avis", "Site web", "Instagram",
+            "Abonnés Instagram", "Email", "Téléphone",
+            "Valeur estimée", "Dernière prise de contact", "Prochain rappel",
+            "Services", "Date création",
+        ])
+        for p in rows:
+            svcs = ", ".join(p.get("services_needed") or [])
+            writer.writerow([
+                p.get("id"), p.get("name"), p.get("category"), p.get("city"), p.get("country"),
+                p.get("status"), p.get("score"), p.get("priority"),
+                p.get("google_rating"), p.get("review_count"),
+                "Oui" if p.get("has_website") else "Non",
+                "Oui" if p.get("has_instagram") else "Non",
+                p.get("instagram_followers", 0),
+                p.get("email", ""), p.get("phone", ""),
+                p.get("estimated_value", 0),
+                p.get("last_contact_date", ""), p.get("next_follow_up", ""),
+                svcs, p.get("created_at", ""),
+            ])
+        yield buf.getvalue().encode("utf-8-sig")  # utf-8-sig = Excel-friendly BOM
+
+    suffix = f"_{country.lower()}" if country != "all" else ""
+    filename = f"prospects{suffix}_{date.today().isoformat()}.csv"
+    return Response(gen(), mimetype="text/csv",
+                    headers={"Content-Disposition": f"attachment; filename={filename}"})
 
 
 init_db()

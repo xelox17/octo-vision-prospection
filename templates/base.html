@@ -47,6 +47,7 @@
       <a href="{{ url_for('pipeline') }}" class="nav-item {% if request.endpoint == 'pipeline' %}active{% endif %}">
         <span class="nav-icon">&#8651;</span>
         <span>Pipeline CRM</span>
+        {% if overdue_count > 0 %}<span class="nav-badge-alert">{{ overdue_count }}</span>{% endif %}
       </a>
 
       <div class="nav-section-label" style="margin-top:1.25rem">MARCHÉS</div>
@@ -84,6 +85,7 @@
       <a href="{{ url_for('pipeline') }}" class="nav-item {% if request.endpoint == 'pipeline' %}active{% endif %}">
         <span class="nav-icon">&#8651;</span>
         <span>Mon pipeline</span>
+        {% if overdue_count > 0 %}<span class="nav-badge-alert">{{ overdue_count }}</span>{% endif %}
       </a>
 
       <div class="nav-section-label" style="margin-top:1.25rem">PROSPECTION</div>
