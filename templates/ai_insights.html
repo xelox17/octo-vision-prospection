@@ -79,7 +79,7 @@
         </div>
         <div class="ai-score-item">
           <span class="ai-score-label">Valeur</span>
-          <span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} TND</span>
+          <span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} {% if p.country == 'FR' %}€{% else %}TND{% endif %}</span>
         </div>
       </div>
 
@@ -230,7 +230,7 @@ function renderAnalysis(d) {
         <div class="ai-result-meta">
           <div><strong>Meilleur canal :</strong> ${d.best_channel}</div>
           <div><strong>Meilleur moment :</strong> ${d.best_time}</div>
-          <div><strong>Valeur estimée :</strong> ${d.estimated_deal_value.toLocaleString()} TND/mois</div>
+          <div><strong>Valeur estimée :</strong> ${d.estimated_deal_value.toLocaleString()} ${pid && document.querySelector('[data-pid="'+pid+'"]')?.dataset.country === 'FR' ? '€' : 'TND'}/mois</div>
         </div>
       </div>
 

@@ -479,8 +479,11 @@ def pipeline():
         rows = [row_to_dict(r) for r in c.fetchall()]
         for r in rows:
             r["score_label"], r["score_class"] = get_score_label(r["score"])
-        stages_data[stage_key] = {"label": stage_label, "color": color, "prospects": rows,
-                                   "total_value": sum(r.get("estimated_value", 0) for r in rows)}
+        stages_data[stage_key] = {
+            "label": stage_label, "color": color, "prospects": rows,
+            "total_tnd": sum(r.get("estimated_value", 0) for r in rows if r.get("country") == "TN"),
+            "total_eur": sum(r.get("estimated_value", 0) for r in rows if r.get("country") == "FR"),
+        }
     conn.close()
     return render_template("pipeline.html", stages_data=stages_data, pipeline_stages=PIPELINE_STAGES)
 

@@ -19,10 +19,11 @@
     <div class="stat-body" style="align-items:center">
       <span class="stat-value" style="color:{{ color }};font-size:1.6rem">{{ stages_data[key].prospects|length }}</span>
       <span class="stat-label" style="text-align:center">{{ label }}</span>
-      {% if stages_data[key].total_value > 0 %}
-        <span style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem">
-          {{ "{:,}".format(stages_data[key].total_value) }} TND
-        </span>
+      {% if stages_data[key].total_tnd > 0 %}
+        <span style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem">{{ "{:,}".format(stages_data[key].total_tnd) }} TND</span>
+      {% endif %}
+      {% if stages_data[key].total_eur > 0 %}
+        <span style="font-size:.7rem;color:#10b981;margin-top:.1rem">{{ "{:,}".format(stages_data[key].total_eur) }} €</span>
       {% endif %}
     </div>
   </div>
@@ -36,8 +37,11 @@
     <div class="kanban-col-header" style="border-top:3px solid {{ color }}">
       <div>
         <span class="kanban-col-title" style="color:{{ color }}">{{ label }}</span>
-        {% if stages_data[key].total_value > 0 %}
-          <div style="font-size:.7rem;color:var(--text-muted)">{{ "{:,}".format(stages_data[key].total_value) }} TND</div>
+        {% if stages_data[key].total_tnd > 0 %}
+          <div style="font-size:.7rem;color:var(--text-muted)">{{ "{:,}".format(stages_data[key].total_tnd) }} TND</div>
+        {% endif %}
+        {% if stages_data[key].total_eur > 0 %}
+          <div style="font-size:.7rem;color:#10b981">{{ "{:,}".format(stages_data[key].total_eur) }} €</div>
         {% endif %}
       </div>
       <span class="kanban-col-count">{{ stages_data[key].prospects|length }}</span>
@@ -55,7 +59,7 @@
         </div>
         <div class="kanban-card-cat">{{ p.category }}</div>
         {% if p.estimated_value %}
-          <div class="kanban-card-value">{{ "{:,}".format(p.estimated_value) }} TND/mois</div>
+          <div class="kanban-card-value">{{ "{:,}".format(p.estimated_value) }} {% if p.country == 'FR' %}€{% else %}TND{% endif %}/mois</div>
         {% endif %}
         <div class="kanban-card-meta">
           <span>&#9733; {{ p.google_rating }}</span>

@@ -55,7 +55,7 @@
               <span class="score-num score-{{ p.score_class }}">{{ p.score }}</span>
             </div>
           </td>
-          <td><span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} TND</span></td>
+          <td><span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} {% if p.country == 'FR' %}€{% else %}TND{% endif %}</span></td>
           <td>
             {% for s in p.services_needed[:2] %}
               <span class="category-badge" style="margin-bottom:.2rem">{{ s }}</span>

@@ -108,7 +108,7 @@
       </div>
       <div class="info-row">
         <span class="info-label">Valeur estimée</span>
-        <span class="info-val value-cell">{{ "{:,}".format(prospect.estimated_value or 0) }} TND/mois</span>
+        <span class="info-val value-cell">{{ "{:,}".format(prospect.estimated_value or 0) }} {% if prospect.country == 'FR' %}€{% else %}TND{% endif %}/mois</span>
       </div>
     </div>
   </div>

@@ -243,7 +243,7 @@
             </span>
           </td>
           <td>
-            <span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} TND</span>
+            <span class="value-cell">{{ "{:,}".format(p.estimated_value or 0) }} {% if p.country == 'FR' %}€{% else %}TND{% endif %}</span>
           </td>
           <td>
             <span class="status-badge status-{{ p.status }}">

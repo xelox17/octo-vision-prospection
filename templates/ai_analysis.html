@@ -23,7 +23,7 @@
   <div class="ai-banner-icon">&#10024;</div>
   <div class="ai-banner-body">
     <strong>{{ prospect.name }} — Score de besoin : {{ prospect.score }}/100</strong>
-    <p>{{ prospect.services_needed|length }} service(s) identifié(s) · {{ vulnerabilities|length }} gap(s) détecté(s) · Valeur estimée : {{ "{:,}".format(prospect.estimated_value or 0) }} TND/mois</p>
+    <p>{{ prospect.services_needed|length }} service(s) identifié(s) · {{ vulnerabilities|length }} gap(s) détecté(s) · Valeur estimée : {{ "{:,}".format(prospect.estimated_value or 0) }} {% if prospect.country == 'FR' %}€{% else %}TND{% endif %}/mois</p>
   </div>
 </div>
 
@@ -135,7 +135,7 @@ function renderFullAnalysis(d) {
           <div class="ai-result-meta-grid">
             <div class="ai-meta-item"><span>Canal optimal</span><strong>${d.best_channel}</strong></div>
             <div class="ai-meta-item"><span>Meilleur timing</span><strong>${d.best_time}</strong></div>
-            <div class="ai-meta-item"><span>Valeur deal</span><strong>${d.estimated_deal_value.toLocaleString()} TND/mois</strong></div>
+            <div class="ai-meta-item"><span>Valeur deal</span><strong>${d.estimated_deal_value.toLocaleString()} ${"{{ prospect.country }}" === "FR" ? "€" : "TND"}/mois</strong></div>
             <div class="ai-meta-item"><span>Focus pitch</span><strong>${d.pitch_focus}</strong></div>
           </div>
         </div>
