@@ -16,49 +16,76 @@
 </div>
 
 <!-- Stats -->
-<div class="stats-grid">
-  <div class="stat-card">
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+
+  <a href="{{ url_for('dashboard') }}" class="stat-card stat-card-link">
     <div class="stat-icon-wrap" style="--c:#6366f1">&#127919;</div>
     <div class="stat-body">
       <span class="stat-value" data-target="{{ stats.total }}">{{ stats.total }}</span>
       <span class="stat-label">Prospects actifs</span>
     </div>
-  </div>
-  <div class="stat-card">
+    <span class="stat-card-arrow">&#8594;</span>
+  </a>
+
+  <a href="{{ url_for('pipeline') }}" class="stat-card stat-card-link">
     <div class="stat-icon-wrap" style="--c:#f59e0b">&#128293;</div>
     <div class="stat-body">
       <span class="stat-value" data-target="{{ stats.in_pipeline }}">{{ stats.in_pipeline }}</span>
       <span class="stat-label">En pipeline</span>
     </div>
-  </div>
-  <div class="stat-card">
+    <span class="stat-card-arrow">&#8594;</span>
+  </a>
+
+  <a href="{{ url_for('dashboard') }}?status=closed_won" class="stat-card stat-card-link">
     <div class="stat-icon-wrap" style="--c:#10b981">&#10003;</div>
     <div class="stat-body">
       <span class="stat-value" data-target="{{ stats.won }}">{{ stats.won }}</span>
       <span class="stat-label">Clients gagnés</span>
     </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon-wrap" style="--c:#8b5cf6">&#8383;</div>
-    <div class="stat-body">
-      <span class="stat-value">{{ "{:,}".format(stats.revenue) }}</span>
-      <span class="stat-label">Revenus TND</span>
-    </div>
-  </div>
-  <div class="stat-card">
+    <span class="stat-card-arrow">&#8594;</span>
+  </a>
+
+  <a href="{{ url_for('dashboard') }}?sort=value" class="stat-card stat-card-link">
     <div class="stat-icon-wrap" style="--c:#ef4444">&#9888;</div>
     <div class="stat-body">
       <span class="stat-value" data-target="{{ stats.overdue }}">{{ stats.overdue }}</span>
       <span class="stat-label">Relances dues</span>
     </div>
-  </div>
-  <div class="stat-card">
+    <span class="stat-card-arrow">&#8594;</span>
+  </a>
+
+</div>
+
+<!-- Revenus + Archive -->
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:.75rem">
+
+  <a href="{{ url_for('marche_tunisie') }}" class="stat-card stat-card-link" style="border-top:3px solid #e70013">
+    <div class="stat-icon-wrap" style="--c:#e70013">&#127950;</div>
+    <div class="stat-body">
+      <span class="stat-value">{{ "{:,}".format(stats.revenue_tnd) }}</span>
+      <span class="stat-label">Revenus TND — Tunisie</span>
+    </div>
+    <span class="stat-card-arrow">&#8594;</span>
+  </a>
+
+  <a href="{{ url_for('marche_france') }}" class="stat-card stat-card-link" style="border-top:3px solid #002395">
+    <div class="stat-icon-wrap" style="--c:#002395">&#127989;</div>
+    <div class="stat-body">
+      <span class="stat-value">{{ "{:,}".format(stats.revenue_eur) }} €</span>
+      <span class="stat-label">Revenus EUR — France</span>
+    </div>
+    <span class="stat-card-arrow">&#8594;</span>
+  </a>
+
+  <a href="{{ url_for('archive') }}" class="stat-card stat-card-link">
     <div class="stat-icon-wrap" style="--c:#6b7280">&#9783;</div>
     <div class="stat-body">
       <span class="stat-value" data-target="{{ stats.archived }}">{{ stats.archived }}</span>
       <span class="stat-label">Archivés</span>
     </div>
-  </div>
+    <span class="stat-card-arrow">&#8594;</span>
+  </a>
+
 </div>
 
 <!-- Filters -->

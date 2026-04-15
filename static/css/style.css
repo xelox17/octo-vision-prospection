@@ -208,6 +208,17 @@ input, select, textarea { font-family: inherit; }
   transition: transform .15s, border-color .15s;
 }
 .stat-card:hover { transform: translateY(-2px); border-color: var(--accent-ring); }
+.stat-card-link {
+  text-decoration: none; color: inherit; cursor: pointer;
+  position: relative;
+}
+.stat-card-link:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-ring); }
+.stat-card-link:hover .stat-card-arrow { opacity: 1; transform: translateX(3px); }
+.stat-card-arrow {
+  position: absolute; right: .9rem; top: 50%; transform: translateY(-50%);
+  font-size: .85rem; color: var(--accent); opacity: 0;
+  transition: opacity .15s, transform .15s;
+}
 .stat-icon-wrap {
   width: 42px; height: 42px; flex-shrink: 0;
   border-radius: var(--r-sm);
