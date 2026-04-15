@@ -910,7 +910,6 @@ def api_stats():
 @app.route("/api/ai/analyze/<int:pid>")
 @login_required
 def ai_analyze(pid):
-    """Mock AI analysis endpoint — will be replaced with Claude API."""
     conn = get_db()
     c = conn.cursor()
     c.execute("SELECT * FROM prospects WHERE id = ?", (pid,))
@@ -921,29 +920,70 @@ def ai_analyze(pid):
     p = row_to_dict(row)
     conn.close()
 
-    # Mock AI analysis (will be Claude API later)
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if api_key:
+        try:
+            import anthropic as _anthropic
+            currency = "€" if p.get("country") == "FR" else "TND"
+            services = p["services_needed"]
+            prompt = f"""Tu es un expert en développement commercial pour Octo Vision Digital Solutions, une agence web qui vend aux restaurants.
+
+Analyse ce prospect et génère une stratégie de vente en français.
+
+PROSPECT :
+- Nom : {p['name']} ({p['category']}) — {p.get('city','')} {p.get('country','TN')}
+- Google : {p['google_rating']}/5 · {p['review_count']} avis
+- Site web : {'Oui' if p['has_website'] else 'Non'} · SEO : {p['seo_score']}/100
+- Instagram : {'Oui, ' + str(p['instagram_followers']) + ' abonnés' if p['has_instagram'] else 'Non'} · Dernier post : il y a {p['last_post_days_ago']} jours
+- Score de besoin : {p['score']}/100
+- Services identifiés : {', '.join(services) if services else 'aucun'}
+- Valeur estimée : {p['estimated_value']} {currency}/mois
+- Email : {'Oui' if p.get('email') else 'Non'} · Téléphone : {'Oui' if p.get('phone') else 'Non'}
+
+Réponds UNIQUEMENT avec un JSON valide sans markdown :
+{{
+  "conversion_probability": <0-100>,
+  "best_channel": "<canal optimal>",
+  "best_time": "<meilleur moment>",
+  "pitch_focus": "<service principal à vendre>",
+  "key_insight": "<observation clé sur ce prospect en 1 phrase percutante>",
+  "recommended_approach": "<stratégie d'approche concrète en 2 phrases>",
+  "expected_roi": "<ROI estimé pour le client>",
+  "urgency_level": "<low|medium|high|urgent>",
+  "estimated_deal_value": {p['estimated_value']}
+}}"""
+            client = _anthropic.Anthropic(api_key=api_key)
+            msg = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=600,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            analysis = json.loads(msg.content[0].text)
+            analysis["generated_at"] = datetime.now().isoformat()
+            analysis["model"] = "Claude Sonnet 4.6"
+            return jsonify(analysis)
+        except Exception as e:
+            # Fall through to mock on any error
+            app.logger.error(f"Claude API error: {e}")
+
+    # Fallback mock (no API key or API error)
     services = p["services_needed"]
-    score = p["score"]
     top_service = services[0] if services else "présence digitale"
-
-    conversion_prob = min(95, max(20, score + 10)) if score > 50 else max(15, score - 5)
-    best_channel = "Email froid" if p.get("email") else ("WhatsApp" if p.get("phone") else "DM Instagram")
-
-    analysis = {
-        "conversion_probability": conversion_prob,
+    score = p["score"]
+    best_channel = "Email" if p.get("email") else ("WhatsApp" if p.get("phone") else "DM Instagram")
+    return jsonify({
+        "conversion_probability": min(95, max(20, score + 10)) if score > 50 else max(15, score - 5),
         "best_channel": best_channel,
         "best_time": "Mardi-Jeudi, 10h-11h ou 14h30-16h",
         "pitch_focus": top_service,
         "estimated_deal_value": p.get("estimated_value", 1500),
         "urgency_level": p.get("priority", "medium"),
-        "key_insight": f"{p['name']} présente {len(services)} gaps digitaux critiques. Le manque de {top_service.lower()} est l'argument d'accroche le plus fort.",
+        "key_insight": f"{p['name']} présente {len(services)} gaps digitaux critiques. Le manque de {top_service.lower()} est l'argument principal.",
         "recommended_approach": "Commencer par un audit gratuit pour montrer la valeur concrète, puis proposer un pack mensuel.",
-        "competitor_analysis": "Vos concurrents directs dans ce quartier ont en moyenne 2.3x plus de visibilité en ligne.",
-        "expected_roi": f"Un investissement de {p.get('estimated_value', 1500)} TND/mois peut générer +40% de nouveaux clients selon nos benchmarks.",
+        "expected_roi": f"Un investissement de {p.get('estimated_value', 1500)}/mois peut générer +40% de nouveaux clients.",
         "generated_at": datetime.now().isoformat(),
-        "model": "Claude API (non connecté — aperçu)",
-    }
-    return jsonify(analysis)
+        "model": "Aperçu local (clé API non configurée)",
+    })
 
 
 # ─── Ajouter un prospect ──────────────────────────────────────────────────────
