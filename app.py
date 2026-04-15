@@ -215,6 +215,14 @@ def logout():
 @app.route("/")
 @login_required
 def dashboard():
+    role = session.get("role", "commercial")
+    # Commercial gets their own action-focused view
+    if role == "commercial":
+        return _dashboard_commercial()
+    return _dashboard_admin()
+
+
+def _dashboard_admin():
     conn = get_db()
     c = conn.cursor()
 
@@ -232,36 +240,29 @@ def dashboard():
     archived_count = c.fetchone()[0]
     c.execute("SELECT COUNT(*) FROM prospects WHERE next_follow_up != '' AND next_follow_up <= date('now') AND status NOT IN ('closed_won','closed_lost','archived')")
     overdue = c.fetchone()[0]
+    c.execute("SELECT COALESCE(SUM(estimated_value),0) FROM prospects WHERE status NOT IN ('new','closed_won','closed_lost','archived')")
+    pipeline_value = c.fetchone()[0]
 
-    status_filter = request.args.get("status", "all")
-    sort_by       = request.args.get("sort", "score")
+    status_filter   = request.args.get("status", "all")
+    sort_by         = request.args.get("sort", "score")
     priority_filter = request.args.get("priority", "all")
-    search        = request.args.get("search", "")
+    search          = request.args.get("search", "")
 
     query  = "SELECT * FROM prospects WHERE status != 'archived'"
     params = []
-
     if status_filter != "all":
-        query += " AND status = ?"
-        params.append(status_filter)
-
+        query += " AND status = ?"; params.append(status_filter)
     if priority_filter != "all":
-        query += " AND priority = ?"
-        params.append(priority_filter)
-
+        query += " AND priority = ?"; params.append(priority_filter)
     if search:
         query += " AND (name LIKE ? OR category LIKE ? OR address LIKE ?)"
-        like = f"%{search}%"
-        params.extend([like, like, like])
-
-    order = {"score": "score DESC", "rating": "google_rating DESC",
-             "name": "name ASC", "value": "estimated_value DESC"}.get(sort_by, "score DESC")
+        like = f"%{search}%"; params.extend([like, like, like])
+    order = {"score":"score DESC","rating":"google_rating DESC","name":"name ASC","value":"estimated_value DESC"}.get(sort_by,"score DESC")
     query += f" ORDER BY {order}"
 
     c.execute(query, params)
     prospects = [row_to_dict(r) for r in c.fetchall()]
     conn.close()
-
     for p in prospects:
         p["score_label"], p["score_class"] = get_score_label(p["score"])
 
@@ -269,6 +270,7 @@ def dashboard():
         "total": total, "won": won, "in_pipeline": in_pipeline,
         "revenue_tnd": revenue_tnd, "revenue_eur": revenue_eur,
         "archived": archived_count, "overdue": overdue,
+        "pipeline_value": pipeline_value,
     }
     return render_template(
         "dashboard.html",
@@ -277,7 +279,53 @@ def dashboard():
         current_status=status_filter, current_sort=sort_by,
         current_priority=priority_filter, search=search,
         today=date.today().isoformat(),
-        current_user=get_current_user(),
+    )
+
+
+def _dashboard_commercial():
+    conn = get_db()
+    c = conn.cursor()
+    today_str = date.today().isoformat()
+
+    # Relances en retard ou aujourd'hui
+    c.execute("""SELECT * FROM prospects WHERE next_follow_up != '' AND next_follow_up <= ?
+                 AND status NOT IN ('closed_won','closed_lost','archived')
+                 ORDER BY next_follow_up ASC""", (today_str,))
+    followups = [row_to_dict(r) for r in c.fetchall()]
+
+    # Prospects chauds à contacter (score élevé, status=new)
+    c.execute("SELECT * FROM prospects WHERE status='new' ORDER BY score DESC LIMIT 8")
+    hot_prospects = [row_to_dict(r) for r in c.fetchall()]
+
+    # Prospects en cours de négociation
+    c.execute("SELECT * FROM prospects WHERE status IN ('contacted','interested','proposal_sent') ORDER BY score DESC")
+    active = [row_to_dict(r) for r in c.fetchall()]
+
+    # Mes stats perso
+    c.execute("SELECT COUNT(*) FROM prospects WHERE status != 'archived'")
+    total = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE status='new'")
+    to_contact = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM prospects WHERE status IN ('contacted','interested','proposal_sent')")
+    in_progress = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM interactions WHERE interaction_date = ?", (today_str,))
+    actions_today = c.fetchone()[0]
+
+    conn.close()
+
+    for p in followups + hot_prospects + active:
+        p["score_label"], p["score_class"] = get_score_label(p["score"])
+
+    stats = {
+        "total": total, "to_contact": to_contact,
+        "in_progress": in_progress, "actions_today": actions_today,
+        "followups_count": len(followups),
+    }
+    return render_template(
+        "dashboard_commercial.html",
+        followups=followups, hot_prospects=hot_prospects, active=active,
+        stats=stats, pipeline_stages=PIPELINE_STAGES,
+        today=today_str,
     )
 
 

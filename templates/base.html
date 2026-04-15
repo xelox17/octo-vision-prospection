@@ -21,7 +21,10 @@
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-section-label">PRINCIPAL</div>
+
+      {% if current_user and current_user.role == 'admin' %}
+      <!-- ── Menu ADMIN ── -->
+      <div class="nav-section-label">MANAGEMENT</div>
       <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
         <span class="nav-icon">&#9783;</span>
         <span>Vue globale</span>
@@ -50,13 +53,44 @@
         <span class="nav-badge-ai">BETA</span>
       </a>
 
-      {% if current_user and current_user.role == 'admin' %}
       <div class="nav-section-label" style="margin-top:1.25rem">DONNÉES</div>
       <a href="{{ url_for('archive') }}" class="nav-item {% if request.endpoint == 'archive' %}active{% endif %}">
         <span class="nav-icon">&#128193;</span>
         <span>Archive</span>
       </a>
+
+      {% else %}
+      <!-- ── Menu COMMERCIAL ── -->
+      <div class="nav-section-label">MON ESPACE</div>
+      <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <span class="nav-icon">&#128188;</span>
+        <span>Mes missions</span>
+      </a>
+      <a href="{{ url_for('pipeline') }}" class="nav-item {% if request.endpoint == 'pipeline' %}active{% endif %}">
+        <span class="nav-icon">&#8651;</span>
+        <span>Mon pipeline</span>
+      </a>
+
+      <div class="nav-section-label" style="margin-top:1.25rem">PROSPECTION</div>
+      <a href="{{ url_for('marche_tunisie') }}" class="nav-item {% if request.endpoint == 'marche_tunisie' %}active{% endif %}">
+        <span class="nav-icon">&#127950;</span>
+        <span>Prospects Tunisie</span>
+        <span class="nav-country-tag tn">TN</span>
+      </a>
+      <a href="{{ url_for('marche_france') }}" class="nav-item {% if request.endpoint == 'marche_france' %}active{% endif %}">
+        <span class="nav-icon">&#127989;</span>
+        <span>Prospects France</span>
+        <span class="nav-country-tag fr">FR</span>
+      </a>
+
+      <div class="nav-section-label" style="margin-top:1.25rem">OUTILS</div>
+      <a href="{{ url_for('ai_insights') }}" class="nav-item nav-item-ai {% if request.endpoint in ['ai_insights','ai_analysis'] %}active{% endif %}">
+        <span class="nav-icon">&#10024;</span>
+        <span>Analyse IA</span>
+        <span class="nav-badge-ai">BETA</span>
+      </a>
       {% endif %}
+
     </nav>
 
     <div class="sidebar-footer">
