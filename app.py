@@ -1,12 +1,53 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 import json
 import os
 import sqlite3
 from datetime import datetime, date
-from database import init_db, seed_db, get_db
+from functools import wraps
+from database import init_db, seed_db, get_db, check_password
 from outreach import generate_email, generate_dm, generate_whatsapp
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "octo-vision-secret-2024")
+
+
+# ─── Auth helpers ─────────────────────────────────────────────────────────────
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("user_id"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("user_id"):
+            return redirect(url_for("login"))
+        if session.get("role") != "admin":
+            return redirect(url_for("dashboard"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def get_current_user():
+    return {
+        "id":        session.get("user_id"),
+        "username":  session.get("username"),
+        "full_name": session.get("full_name"),
+        "role":      session.get("role"),
+    } if session.get("user_id") else None
+
+
+@app.context_processor
+def inject_user():
+    """Injecte current_user dans tous les templates automatiquement."""
+    return {"current_user": get_current_user()}
+
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -138,9 +179,41 @@ PRIORITY_CONFIG = {
 }
 
 
+# ─── Login / Logout ───────────────────────────────────────────────────────────
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip().lower()
+        password = request.form.get("password", "")
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user = c.fetchone()
+        conn.close()
+        if user and check_password(password, user["password_hash"]):
+            session["user_id"]   = user["id"]
+            session["username"]  = user["username"]
+            session["full_name"] = user["full_name"]
+            session["role"]      = user["role"]
+            return redirect(url_for("dashboard"))
+        error = "Identifiant ou mot de passe incorrect."
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
 # ─── Dashboard ────────────────────────────────────────────────────────────────
 
 @app.route("/")
+@login_required
 def dashboard():
     conn = get_db()
     c = conn.cursor()
@@ -204,12 +277,14 @@ def dashboard():
         current_status=status_filter, current_sort=sort_by,
         current_priority=priority_filter, search=search,
         today=date.today().isoformat(),
+        current_user=get_current_user(),
     )
 
 
 # ─── Prospect Detail ──────────────────────────────────────────────────────────
 
 @app.route("/prospect/<int:pid>")
+@login_required
 def prospect_detail(pid):
     conn = get_db()
     c = conn.cursor()
@@ -247,6 +322,7 @@ def prospect_detail(pid):
 # ─── Activity ─────────────────────────────────────────────────────────────────
 
 @app.route("/prospect/<int:pid>/activity")
+@login_required
 def activity(pid):
     conn = get_db()
     c = conn.cursor()
@@ -288,6 +364,7 @@ def activity(pid):
 # ─── Outreach ─────────────────────────────────────────────────────────────────
 
 @app.route("/prospect/<int:pid>/outreach")
+@login_required
 def outreach(pid):
     conn = get_db()
     c = conn.cursor()
@@ -313,6 +390,7 @@ def outreach(pid):
 # ─── Pipeline ─────────────────────────────────────────────────────────────────
 
 @app.route("/pipeline")
+@login_required
 def pipeline():
     conn = get_db()
     c = conn.cursor()
@@ -331,6 +409,7 @@ def pipeline():
 # ─── Marché Tunisie ───────────────────────────────────────────────────────────
 
 @app.route("/marche/tunisie")
+@login_required
 def marche_tunisie():
     conn = get_db()
     c = conn.cursor()
@@ -387,6 +466,7 @@ def marche_tunisie():
 # ─── Marché France ────────────────────────────────────────────────────────────
 
 @app.route("/marche/france")
+@login_required
 def marche_france():
     conn = get_db()
     c = conn.cursor()
@@ -454,6 +534,7 @@ def marche_france():
 # ─── Archive ──────────────────────────────────────────────────────────────────
 
 @app.route("/archive")
+@login_required
 def archive():
     conn = get_db()
     c = conn.cursor()
@@ -487,6 +568,7 @@ def archive():
 # ─── AI Insights ──────────────────────────────────────────────────────────────
 
 @app.route("/ai-insights")
+@login_required
 def ai_insights():
     conn = get_db()
     c = conn.cursor()
@@ -507,6 +589,7 @@ def ai_insights():
 
 
 @app.route("/prospect/<int:pid>/ai-analysis")
+@login_required
 def ai_analysis(pid):
     conn = get_db()
     c = conn.cursor()
@@ -525,6 +608,7 @@ def ai_analysis(pid):
 # ─── API ──────────────────────────────────────────────────────────────────────
 
 @app.route("/api/prospect/<int:pid>/status", methods=["POST"])
+@login_required
 def update_status(pid):
     data = request.get_json()
     new_status = data.get("status")
@@ -554,6 +638,7 @@ def update_status(pid):
 
 
 @app.route("/api/prospect/<int:pid>/note", methods=["POST"])
+@login_required
 def add_note(pid):
     data = request.get_json()
     note = data.get("note", "").strip()
@@ -568,6 +653,7 @@ def add_note(pid):
 
 
 @app.route("/api/prospect/<int:pid>/interaction", methods=["POST"])
+@login_required
 def add_interaction(pid):
     data = request.get_json()
     required = ["type", "interaction_date", "summary"]
@@ -604,6 +690,7 @@ def add_interaction(pid):
 
 
 @app.route("/api/prospect/<int:pid>/interaction/<int:iid>", methods=["DELETE"])
+@login_required
 def delete_interaction(pid, iid):
     conn = get_db()
     c = conn.cursor()
@@ -614,6 +701,7 @@ def delete_interaction(pid, iid):
 
 
 @app.route("/api/prospect/<int:pid>/archive", methods=["POST"])
+@login_required
 def archive_prospect(pid):
     conn = get_db()
     c = conn.cursor()
@@ -632,6 +720,7 @@ def archive_prospect(pid):
 
 
 @app.route("/api/prospect/<int:pid>/restore", methods=["POST"])
+@login_required
 def restore_prospect(pid):
     conn = get_db()
     c = conn.cursor()
@@ -644,6 +733,7 @@ def restore_prospect(pid):
 
 
 @app.route("/api/prospect/<int:pid>/priority", methods=["POST"])
+@login_required
 def update_priority(pid):
     data = request.get_json()
     priority = data.get("priority")
@@ -658,6 +748,7 @@ def update_priority(pid):
 
 
 @app.route("/api/prospect/<int:pid>/follow-up", methods=["POST"])
+@login_required
 def set_follow_up(pid):
     data = request.get_json()
     follow_up = data.get("next_follow_up", "")
@@ -670,6 +761,7 @@ def set_follow_up(pid):
 
 
 @app.route("/api/stats")
+@login_required
 def api_stats():
     conn = get_db()
     c = conn.cursor()
@@ -687,6 +779,7 @@ def api_stats():
 
 
 @app.route("/api/ai/analyze/<int:pid>")
+@login_required
 def ai_analyze(pid):
     """Mock AI analysis endpoint — will be replaced with Claude API."""
     conn = get_db()

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion — Octo Vision</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: #0d0f14;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-wrapper {
+      width: 100%;
+      max-width: 420px;
+      padding: 1.5rem;
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 32px rgba(99,102,241,.4);
+    }
+
+    .login-logo h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -.02em;
+    }
+
+    .login-logo p {
+      font-size: .8rem;
+      color: #64748b;
+      margin-top: .25rem;
+    }
+
+    .login-card {
+      background: #161b27;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+
+    .login-card h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #f1f5f9;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: .4rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    input {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      color: #f1f5f9;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+    }
+
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      border-radius: 8px;
+      padding: .85rem;
+      color: #fff;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: opacity .15s, transform .1s;
+      letter-spacing: .01em;
+    }
+
+    .btn-login:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-login:active { transform: translateY(0); }
+
+    .error-box {
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.3);
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      color: #fca5a5;
+      font-size: .85rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: .75rem;
+      color: #334155;
+    }
+
+    .role-hint {
+      display: flex;
+      gap: .75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #1e293b;
+    }
+
+    .role-chip {
+      flex: 1;
+      background: #0d1117;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: .6rem .75rem;
+      text-align: center;
+    }
+
+    .role-chip .chip-icon { font-size: 1.1rem; display: block; margin-bottom: .2rem; }
+    .role-chip .chip-name { font-size: .75rem; font-weight: 700; color: #94a3b8; }
+    .role-chip .chip-role { font-size: .65rem; color: #475569; }
+  </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+
+  <div class="login-logo">
+    <div class="login-logo-icon">&#127757;</div>
+    <h1>Octo Vision</h1>
+    <p>Prospection Platform — Digital Solutions</p>
+  </div>
+
+  <div class="login-card">
+    <h2>Connexion</h2>
+
+    {% if error %}
+    <div class="error-box">&#9888; {{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="form-group">
+        <label for="username">Identifiant</label>
+        <input type="text" id="username" name="username"
+               placeholder="admin ou ayoub" autocomplete="username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" name="password"
+               placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-login">Se connecter &#8594;</button>
+    </form>
+
+    <div class="role-hint">
+      <div class="role-chip">
+        <span class="chip-icon">&#128081;</span>
+        <span class="chip-name">Admin</span>
+        <span class="chip-role">Accès complet</span>
+      </div>
+      <div class="role-chip">
+        <span class="chip-icon">&#128188;</span>
+        <span class="chip-name">Commercial</span>
+        <span class="chip-role">Prospection & CRM</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-footer">Octo Vision Digital Solutions &copy; 2024</div>
+</div>
+
+<script>
+  document.getElementById('username').focus();
+</script>
+</body>
+</html>

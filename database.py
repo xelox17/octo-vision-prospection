@@ -1,8 +1,17 @@
 import sqlite3
 import json
+import hashlib
 from datetime import datetime, date
 
 DB_PATH = "prospection.db"
+
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
+def check_password(password, hashed):
+    return hash_password(password) == hashed
 
 
 def get_db():
@@ -106,6 +115,26 @@ def init_db():
             FOREIGN KEY (prospect_id) REFERENCES prospects(id)
         )
     """)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            full_name TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'commercial',
+            password_hash TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Seed default users if not exist
+    c.execute("SELECT COUNT(*) FROM users")
+    if c.fetchone()[0] == 0:
+        c.execute("INSERT INTO users (username, full_name, role, password_hash) VALUES (?, ?, ?, ?)",
+                  ("admin", "Admin — Octo Vision", "admin", hash_password("octo2024")))
+        c.execute("INSERT INTO users (username, full_name, role, password_hash) VALUES (?, ?, ?, ?)",
+                  ("ayoub", "Ayoub Abid", "commercial", hash_password("ayoub2024")))
+        print("[Auth] Utilisateurs créés : admin / ayoub")
 
     conn.commit()
     conn.close()

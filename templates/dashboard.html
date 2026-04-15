@@ -57,13 +57,17 @@
 </div>
 
 <!-- Revenus + Archive -->
-<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:.75rem">
+<div class="stats-grid" style="grid-template-columns:repeat({% if current_user and current_user.role == 'admin' %}3{% else %}2{% endif %},1fr);margin-top:.75rem">
 
   <a href="{{ url_for('marche_tunisie') }}" class="stat-card stat-card-link" style="border-top:3px solid #e70013">
     <div class="stat-icon-wrap" style="--c:#e70013">&#127950;</div>
     <div class="stat-body">
+      {% if current_user and current_user.role == 'admin' %}
       <span class="stat-value">{{ "{:,}".format(stats.revenue_tnd) }}</span>
-      <span class="stat-label">Revenus TND — Tunisie</span>
+      {% else %}
+      <span class="stat-value" data-target="{{ stats.total }}">—</span>
+      {% endif %}
+      <span class="stat-label">Marché Tunisie</span>
     </div>
     <span class="stat-card-arrow">&#8594;</span>
   </a>
@@ -71,12 +75,17 @@
   <a href="{{ url_for('marche_france') }}" class="stat-card stat-card-link" style="border-top:3px solid #002395">
     <div class="stat-icon-wrap" style="--c:#002395">&#127989;</div>
     <div class="stat-body">
+      {% if current_user and current_user.role == 'admin' %}
       <span class="stat-value">{{ "{:,}".format(stats.revenue_eur) }} €</span>
-      <span class="stat-label">Revenus EUR — France</span>
+      {% else %}
+      <span class="stat-value">—</span>
+      {% endif %}
+      <span class="stat-label">Marché France</span>
     </div>
     <span class="stat-card-arrow">&#8594;</span>
   </a>
 
+  {% if current_user and current_user.role == 'admin' %}
   <a href="{{ url_for('archive') }}" class="stat-card stat-card-link">
     <div class="stat-icon-wrap" style="--c:#6b7280">&#9783;</div>
     <div class="stat-body">
@@ -85,6 +94,7 @@
     </div>
     <span class="stat-card-arrow">&#8594;</span>
   </a>
+  {% endif %}
 
 </div>
 
