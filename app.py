@@ -495,6 +495,7 @@ def marche_tunisie():
     status_f = request.args.get("status", "all")
     sort_by  = request.args.get("sort", "score")
     priority_f = request.args.get("priority", "all")
+    temp_f   = request.args.get("temp", "")
 
     query  = "SELECT * FROM prospects WHERE country='TN' AND status!='archived'"
     params = []
@@ -505,6 +506,10 @@ def marche_tunisie():
     if search:
         query += " AND (name LIKE ? OR category LIKE ? OR address LIKE ?)"
         like = f"%{search}%"; params.extend([like, like, like])
+    if temp_f == "hot":      query += " AND score >= 70"
+    elif temp_f == "warm":   query += " AND score >= 45 AND score < 70"
+    elif temp_f == "lukewarm": query += " AND score >= 20 AND score < 45"
+    elif temp_f == "cold":   query += " AND score < 20"
     order = {"score":"score DESC","rating":"google_rating DESC","name":"name ASC","value":"estimated_value DESC"}.get(sort_by,"score DESC")
     query += f" ORDER BY {order}"
 
@@ -556,6 +561,7 @@ def marche_france():
     status_f = request.args.get("status", "all")
     city_f   = request.args.get("city", "all")
     sort_by  = request.args.get("sort", "score")
+    temp_f   = request.args.get("temp", "")
 
     # Get distinct cities for filter
     c.execute("SELECT DISTINCT city FROM prospects WHERE country='FR' AND city!='' ORDER BY city")
@@ -570,6 +576,10 @@ def marche_france():
     if search:
         query += " AND (name LIKE ? OR category LIKE ? OR city LIKE ?)"
         like = f"%{search}%"; params.extend([like, like, like])
+    if temp_f == "hot":      query += " AND score >= 70"
+    elif temp_f == "warm":   query += " AND score >= 45 AND score < 70"
+    elif temp_f == "lukewarm": query += " AND score >= 20 AND score < 45"
+    elif temp_f == "cold":   query += " AND score < 20"
     order = {"score":"score DESC","rating":"google_rating DESC","name":"name ASC"}.get(sort_by,"score DESC")
     query += f" ORDER BY {order}"
 
@@ -729,8 +739,8 @@ def add_interaction(pid):
     c = conn.cursor()
     c.execute("""
         INSERT INTO interactions
-        (prospect_id, type, interaction_date, duration_min, contact_name, summary, outcome, next_action, next_action_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (prospect_id, type, interaction_date, duration_min, contact_name, summary, outcome, next_action, next_action_date, user_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         pid,
         data["type"],
@@ -741,6 +751,7 @@ def add_interaction(pid):
         data.get("outcome", "neutre"),
         data.get("next_action", ""),
         data.get("next_action_date", ""),
+        session.get("user_id"),
     ))
 
     # Update last_contact_date and next_follow_up on prospect
@@ -921,6 +932,146 @@ def ai_analyze(pid):
         "model": "Claude API (non connecté — aperçu)",
     }
     return jsonify(analysis)
+
+
+# ─── Ajouter un prospect ──────────────────────────────────────────────────────
+
+@app.route("/prospect/ajouter", methods=["GET", "POST"])
+@login_required
+def add_prospect():
+    error = None
+    if request.method == "POST":
+        f = request.form
+        country = f.get("country", "TN")
+        name    = f.get("name", "").strip()
+        if not name:
+            error = "Le nom de l'établissement est requis."
+        else:
+            p = {
+                "has_website":      int(bool(f.get("has_website"))),
+                "has_instagram":    int(bool(f.get("has_instagram"))),
+                "instagram_followers": int(f.get("instagram_followers") or 0),
+                "has_facebook":     int(bool(f.get("has_facebook"))),
+                "last_post_days_ago": int(f.get("last_post_days_ago") or 999),
+                "seo_score":        int(f.get("seo_score") or 0),
+                "review_count":     int(f.get("review_count") or 0),
+                "google_rating":    float(f.get("google_rating") or 0),
+                "has_digital_menu": int(bool(f.get("has_digital_menu"))),
+                "has_online_booking": int(bool(f.get("has_online_booking"))),
+                "has_modern_menu":  int(bool(f.get("has_modern_menu"))),
+                "has_pro_logo":     int(bool(f.get("has_pro_logo"))),
+                "has_gmaps_photos": int(bool(f.get("has_gmaps_photos"))),
+                "menu_board_quality": f.get("menu_board_quality", "unknown"),
+            }
+            from database import compute_score_and_services, compute_france_score_and_services
+            if country == "FR":
+                score, services = compute_france_score_and_services(p)
+            else:
+                score, services = compute_score_and_services(p)
+
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("""
+                INSERT INTO prospects (
+                    name, category, address, city, country, phone, email,
+                    google_rating, review_count, has_website, website_url,
+                    has_instagram, instagram_handle, instagram_followers,
+                    has_facebook, last_post_days_ago, seo_score,
+                    has_digital_menu, has_online_booking, has_qr_menu,
+                    has_modern_menu, has_pro_logo, has_gmaps_photos, menu_board_quality,
+                    status, score, services_needed, priority, estimated_value,
+                    next_follow_up, assigned_to
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (
+                name, f.get("category","").strip(), f.get("address","").strip(),
+                f.get("city","").strip(), country,
+                f.get("phone","").strip(), f.get("email","").strip() or None,
+                p["google_rating"], p["review_count"],
+                p["has_website"], f.get("website_url","").strip() or None,
+                p["has_instagram"], f.get("instagram_handle","").strip() or None,
+                p["instagram_followers"], p["has_facebook"], p["last_post_days_ago"],
+                p["seo_score"], p["has_digital_menu"], p["has_online_booking"], 0,
+                p["has_modern_menu"], p["has_pro_logo"], p["has_gmaps_photos"],
+                p["menu_board_quality"],
+                "new", score, json.dumps(services),
+                f.get("priority","medium"), int(f.get("estimated_value") or 0),
+                f.get("next_follow_up",""),
+                session.get("user_id"),
+            ))
+            conn.commit()
+            # Get the new ID
+            c.execute("SELECT id FROM prospects WHERE name=? ORDER BY created_at DESC LIMIT 1", (name,))
+            row = c.fetchone()
+            conn.close()
+            new_id = row[0] if row else None
+            if new_id:
+                return redirect(url_for("prospect_detail", pid=new_id))
+            return redirect(url_for("dashboard"))
+
+    return render_template("add_prospect.html", error=error, pipeline_stages=PIPELINE_STAGES)
+
+
+# ─── Performance commerciale (admin) ──────────────────────────────────────────
+
+@app.route("/admin/performance")
+@admin_required
+def performance():
+    conn = get_db()
+    c = conn.cursor()
+
+    # All users
+    c.execute("SELECT id, full_name, role FROM users ORDER BY role, full_name")
+    users = [dict(u) for u in c.fetchall()]
+
+    stats = []
+    for u in users:
+        uid = u["id"]
+        # Prospects assigned to this user
+        c.execute("SELECT COUNT(*) FROM prospects WHERE assigned_to=? AND status!='archived'", (uid,))
+        assigned = c.fetchone()[0]
+        # Prospects won
+        c.execute("SELECT COUNT(*) FROM prospects WHERE assigned_to=? AND status='closed_won'", (uid,))
+        won = c.fetchone()[0]
+        # Interactions logged by this user
+        c.execute("SELECT COUNT(*) FROM interactions WHERE user_id=?", (uid,))
+        interactions = c.fetchone()[0]
+        # Interactions this month
+        month_start = date.today().replace(day=1).isoformat()
+        c.execute("SELECT COUNT(*) FROM interactions WHERE user_id=? AND interaction_date>=?", (uid, month_start))
+        this_month = c.fetchone()[0]
+        # Overdue follow-ups for their prospects
+        c.execute("""SELECT COUNT(*) FROM prospects WHERE assigned_to=? AND next_follow_up!=''
+                     AND next_follow_up<=? AND status NOT IN ('closed_won','closed_lost','archived')""",
+                  (uid, date.today().isoformat()))
+        overdue = c.fetchone()[0]
+        # Revenue from their prospects
+        c.execute("SELECT COALESCE(SUM(estimated_value),0) FROM prospects WHERE assigned_to=? AND status='closed_won'", (uid,))
+        revenue = c.fetchone()[0]
+        # Last activity date
+        c.execute("SELECT MAX(interaction_date) FROM interactions WHERE user_id=?", (uid,))
+        last_activity = c.fetchone()[0] or "—"
+
+        stats.append({
+            **u,
+            "assigned": assigned, "won": won, "interactions": interactions,
+            "this_month": this_month, "overdue": overdue,
+            "revenue": revenue, "last_activity": last_activity,
+            "conversion": round(won / assigned * 100, 1) if assigned else 0,
+        })
+
+    # Recent activity feed (last 20 interactions with user info)
+    c.execute("""
+        SELECT i.*, p.name as prospect_name, u.full_name as user_name
+        FROM interactions i
+        JOIN prospects p ON p.id = i.prospect_id
+        LEFT JOIN users u ON u.id = i.user_id
+        ORDER BY i.created_at DESC LIMIT 20
+    """)
+    feed = [dict(r) for r in c.fetchall()]
+    conn.close()
+
+    type_map = {t[0]: (t[1], t[2]) for t in INTERACTION_TYPES}
+    return render_template("performance.html", stats=stats, feed=feed, type_map=type_map)
 
 
 # ─── Export CSV ───────────────────────────────────────────────────────────────

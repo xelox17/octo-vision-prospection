@@ -13,8 +13,8 @@
   </div>
   <div class="header-actions">
     <a href="{{ url_for('export_csv', country='FR') }}" class="btn-export">&#8595; Export CSV</a>
+    <a href="{{ url_for('add_prospect') }}?country=FR" class="btn btn-primary">&#43; Ajouter</a>
     <a href="{{ url_for('ai_insights') }}" class="btn btn-ai">&#10024; Analyse IA</a>
-    <a href="{{ url_for('pipeline') }}" class="btn btn-secondary">&#8651; Pipeline</a>
   </div>
 </div>
 
@@ -100,9 +100,19 @@
   </div>
 </div>
 
+<!-- Temperature chips -->
+<div class="temp-chips">
+  <a href="?search={{ search }}&status={{ current_status }}&city={{ current_city }}&sort={{ current_sort }}" class="temp-chip {% if not request.args.get('temp') %}active{% endif %}">Tous</a>
+  <a href="?search={{ search }}&status={{ current_status }}&city={{ current_city }}&sort={{ current_sort }}&temp=hot" class="temp-chip temp-hot {% if request.args.get('temp')=='hot' %}active{% endif %}">&#128293; Très chaud (70+)</a>
+  <a href="?search={{ search }}&status={{ current_status }}&city={{ current_city }}&sort={{ current_sort }}&temp=warm" class="temp-chip temp-warm {% if request.args.get('temp')=='warm' %}active{% endif %}">&#9728; Chaud (45-69)</a>
+  <a href="?search={{ search }}&status={{ current_status }}&city={{ current_city }}&sort={{ current_sort }}&temp=lukewarm" class="temp-chip temp-lukewarm {% if request.args.get('temp')=='lukewarm' %}active{% endif %}">&#127774; Tiède (20-44)</a>
+  <a href="?search={{ search }}&status={{ current_status }}&city={{ current_city }}&sort={{ current_sort }}&temp=cold" class="temp-chip temp-cold {% if request.args.get('temp')=='cold' %}active{% endif %}">&#10052; Froid (&lt;20)</a>
+</div>
+
 <!-- Filters -->
 <div class="filters-bar">
   <form method="get" style="display:contents">
+    <input type="hidden" name="temp" value="{{ request.args.get('temp','') }}">
     <input type="text" name="search" placeholder="Rechercher..." value="{{ search }}"
       class="search-input" oninput="debounce(this)" id="searchInput" />
     <select name="city" class="filter-select" onchange="this.form.submit()">

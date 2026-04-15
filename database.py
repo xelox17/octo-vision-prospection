@@ -118,6 +118,7 @@ def init_db():
         ("has_pro_logo",      "INTEGER DEFAULT 0"),
         ("has_gmaps_photos",  "INTEGER DEFAULT 0"),
         ("menu_board_quality","TEXT DEFAULT 'unknown'"),
+        ("assigned_to",       "INTEGER DEFAULT NULL"),
     ]
     for col, defn in migrations:
         if USE_PG:
@@ -140,10 +141,19 @@ def init_db():
             outcome TEXT DEFAULT 'neutre',
             next_action TEXT DEFAULT '',
             next_action_date TEXT DEFAULT '',
+            user_id INTEGER DEFAULT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (prospect_id) REFERENCES prospects(id)
         )
     """)
+    # Migration: add user_id to interactions if missing
+    if USE_PG:
+        c.execute("ALTER TABLE interactions ADD COLUMN IF NOT EXISTS user_id INTEGER DEFAULT NULL")
+    else:
+        try:
+            c.execute("ALTER TABLE interactions ADD COLUMN user_id INTEGER DEFAULT NULL")
+        except sqlite3.OperationalError:
+            pass
 
     c.execute(f"""
         CREATE TABLE IF NOT EXISTS pipeline_notes (

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Ajouter un prospect — Octo Vision{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Ajouter un prospect</h1>
+    <p class="page-sub">Remplir les informations — le score sera calculé automatiquement</p>
+  </div>
+  <div class="header-actions">
+    <a href="javascript:history.back()" class="btn btn-secondary">&#8592; Retour</a>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert-error">{{ error }}</div>
+{% endif %}
+
+<form method="post" id="addForm">
+
+  <!-- Country selector -->
+  <div class="card" style="margin-bottom:1rem">
+    <div class="card-header"><h2 class="card-title">Marché cible</h2></div>
+    <div style="padding:1.25rem;display:flex;gap:1rem">
+      <label class="country-choice" id="choiceTN">
+        <input type="radio" name="country" value="TN" checked onchange="switchCountry('TN')">
+        <span class="country-choice-inner">
+          <span style="font-size:1.5rem">&#127950;</span>
+          <strong>Tunisie</strong>
+          <span style="font-size:.75rem;color:var(--text-muted)">TND / Score local</span>
+        </span>
+      </label>
+      <label class="country-choice" id="choiceFR">
+        <input type="radio" name="country" value="FR" onchange="switchCountry('FR')">
+        <span class="country-choice-inner">
+          <span style="font-size:1.5rem">&#127989;</span>
+          <strong>France</strong>
+          <span style="font-size:.75rem;color:var(--text-muted)">EUR / Score France</span>
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+
+    <!-- Col 1: Infos générales -->
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">Informations générales</h2></div>
+      <div class="form-body">
+
+        <div class="form-group">
+          <label class="form-label">Nom de l'établissement <span class="req">*</span></label>
+          <input type="text" name="name" class="form-input" required placeholder="ex: Restaurant Le Carthage" value="{{ request.form.get('name','') }}">
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Catégorie <span class="req">*</span></label>
+            <input type="text" name="category" class="form-input" required placeholder="ex: Restaurant, Café, Pizzeria" value="{{ request.form.get('category','') }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ville</label>
+            <input type="text" name="city" class="form-input" placeholder="ex: Tunis, Paris 11e" value="{{ request.form.get('city','') }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Adresse</label>
+          <input type="text" name="address" class="form-input" placeholder="Adresse complète" value="{{ request.form.get('address','') }}">
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Téléphone</label>
+            <input type="text" name="phone" class="form-input" placeholder="+216 71 xxx xxx" value="{{ request.form.get('phone','') }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-input" placeholder="contact@exemple.com" value="{{ request.form.get('email','') }}">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Priorité</label>
+            <select name="priority" class="form-select">
+              <option value="urgent">🔴 Urgent</option>
+              <option value="high">🟠 Élevée</option>
+              <option value="medium" selected>🔵 Normale</option>
+              <option value="low">⚫ Faible</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="valueLabel">Valeur estimée (TND/mois)</label>
+            <input type="number" name="estimated_value" class="form-input" min="0" placeholder="ex: 2500" value="{{ request.form.get('estimated_value','') }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Prochain rappel</label>
+          <input type="date" name="next_follow_up" class="form-input" value="{{ request.form.get('next_follow_up','') }}">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Col 2: Présence digitale -->
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">Présence digitale</h2></div>
+      <div class="form-body">
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Note Google (0-5)</label>
+            <input type="number" name="google_rating" class="form-input" min="0" max="5" step="0.1" placeholder="4.2" value="{{ request.form.get('google_rating','') }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre d'avis</label>
+            <input type="number" name="review_count" class="form-input" min="0" placeholder="87" value="{{ request.form.get('review_count','') }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Score SEO (0-100)</label>
+          <input type="number" name="seo_score" class="form-input" min="0" max="100" placeholder="0 = invisible, 100 = excellent" value="{{ request.form.get('seo_score','') }}">
+        </div>
+
+        <!-- Checkboxes -->
+        <div class="checkbox-grid">
+          <label class="check-item">
+            <input type="checkbox" name="has_website" value="1" {% if request.form.get('has_website') %}checked{% endif %}>
+            <span>&#127760; Site web</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="has_instagram" value="1" {% if request.form.get('has_instagram') %}checked{% endif %}>
+            <span>&#128241; Instagram</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="has_facebook" value="1" {% if request.form.get('has_facebook') %}checked{% endif %}>
+            <span>&#128100; Facebook</span>
+          </label>
+          <!-- TN-specific -->
+          <label class="check-item tn-field">
+            <input type="checkbox" name="has_modern_menu" value="1" {% if request.form.get('has_modern_menu') %}checked{% endif %}>
+            <span>&#127912; Menu board moderne</span>
+          </label>
+          <label class="check-item tn-field">
+            <input type="checkbox" name="has_pro_logo" value="1" {% if request.form.get('has_pro_logo') %}checked{% endif %}>
+            <span>&#10024; Logo professionnel</span>
+          </label>
+          <label class="check-item tn-field">
+            <input type="checkbox" name="has_gmaps_photos" value="1" {% if request.form.get('has_gmaps_photos') %}checked{% endif %}>
+            <span>&#128247; Photos Google Maps</span>
+          </label>
+          <!-- FR-specific -->
+          <label class="check-item fr-field" style="display:none">
+            <input type="checkbox" name="has_digital_menu" value="1" {% if request.form.get('has_digital_menu') %}checked{% endif %}>
+            <span>&#128203; Menu digital QR</span>
+          </label>
+          <label class="check-item fr-field" style="display:none">
+            <input type="checkbox" name="has_online_booking" value="1" {% if request.form.get('has_online_booking') %}checked{% endif %}>
+            <span>&#128197; Réservation en ligne</span>
+          </label>
+          <label class="check-item fr-field" style="display:none">
+            <input type="checkbox" name="has_gmaps_photos" value="1">
+            <span>&#128247; Photos Google Maps</span>
+          </label>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Abonnés Instagram</label>
+            <input type="number" name="instagram_followers" class="form-input" min="0" placeholder="0" value="{{ request.form.get('instagram_followers','') }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jours sans post</label>
+            <input type="number" name="last_post_days_ago" class="form-input" min="0" placeholder="999 = inactif" value="{{ request.form.get('last_post_days_ago','') }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Handle Instagram</label>
+          <input type="text" name="instagram_handle" class="form-input" placeholder="@nomducompte" value="{{ request.form.get('instagram_handle','') }}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">URL Site web</label>
+          <input type="text" name="website_url" class="form-input" placeholder="exemple.com" value="{{ request.form.get('website_url','') }}">
+        </div>
+
+        <!-- TN: menu board quality -->
+        <div class="form-group tn-field">
+          <label class="form-label">Qualité menu board actuel</label>
+          <select name="menu_board_quality" class="form-select">
+            <option value="unknown">Non évalué</option>
+            <option value="inexistant">Inexistant</option>
+            <option value="mauvais">Ancien / mauvais</option>
+            <option value="bon">Bon / moderne</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:1rem">
+    <a href="javascript:history.back()" class="btn btn-secondary">Annuler</a>
+    <button type="submit" class="btn btn-primary">&#43; Ajouter le prospect</button>
+  </div>
+
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchCountry(c) {
+  document.querySelectorAll('.tn-field').forEach(el => el.style.display = c==='TN' ? '' : 'none');
+  document.querySelectorAll('.fr-field').forEach(el => el.style.display = c==='FR' ? '' : 'none');
+  document.getElementById('valueLabel').textContent = c==='TN' ? 'Valeur estimée (TND/mois)' : 'Valeur estimée (€/mois)';
+  document.getElementById('choiceTN').classList.toggle('selected', c==='TN');
+  document.getElementById('choiceFR').classList.toggle('selected', c==='FR');
+}
+switchCountry('TN');
+</script>
+{% endblock %}

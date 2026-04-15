@@ -69,6 +69,12 @@
         <span class="nav-badge-ai">BETA</span>
       </a>
 
+      <div class="nav-section-label" style="margin-top:1.25rem">ÉQUIPE</div>
+      <a href="{{ url_for('performance') }}" class="nav-item {% if request.endpoint == 'performance' %}active{% endif %}">
+        <span class="nav-icon">&#128200;</span>
+        <span>Performance</span>
+      </a>
+
       <div class="nav-section-label" style="margin-top:1.25rem">DONNÉES</div>
       <a href="{{ url_for('archive') }}" class="nav-item {% if request.endpoint == 'archive' %}active{% endif %}">
         <span class="nav-icon">&#128193;</span>

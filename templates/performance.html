@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Performance commerciale — Octo Vision{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Performance commerciale</h1>
+    <p class="page-sub">Suivi des actions et résultats par commercial — {{ stats|length }} membre(s)</p>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('export_csv') }}" class="btn-export">&#8595; Export CSV</a>
+  </div>
+</div>
+
+<!-- Stats cards per user -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1rem;margin-bottom:1.5rem">
+  {% for s in stats %}
+  <div class="card perf-card {% if s.role == 'admin' %}perf-admin{% else %}perf-commercial{% endif %}">
+    <div class="perf-card-header">
+      <div class="perf-avatar {% if s.role == 'admin' %}perf-avatar-admin{% endif %}">
+        {{ s.full_name[0] }}
+      </div>
+      <div>
+        <div class="perf-name">{{ s.full_name }}</div>
+        <div class="perf-role">{% if s.role == 'admin' %}&#128081; Admin{% else %}&#128188; Commercial{% endif %}</div>
+      </div>
+      <div class="perf-conversion" title="Taux de conversion">
+        {{ s.conversion }}%
+      </div>
+    </div>
+
+    <div class="perf-stats-row">
+      <div class="perf-stat">
+        <span class="perf-stat-val">{{ s.assigned }}</span>
+        <span class="perf-stat-lbl">Assignés</span>
+      </div>
+      <div class="perf-stat">
+        <span class="perf-stat-val" style="color:#10b981">{{ s.won }}</span>
+        <span class="perf-stat-lbl">Gagnés</span>
+      </div>
+      <div class="perf-stat">
+        <span class="perf-stat-val">{{ s.interactions }}</span>
+        <span class="perf-stat-lbl">Interactions</span>
+      </div>
+      <div class="perf-stat">
+        <span class="perf-stat-val" style="color:#6366f1">{{ s.this_month }}</span>
+        <span class="perf-stat-lbl">Ce mois</span>
+      </div>
+    </div>
+
+    <div class="perf-footer">
+      {% if s.overdue > 0 %}
+      <span class="perf-overdue">&#9888; {{ s.overdue }} relance{% if s.overdue > 1 %}s{% endif %} en retard</span>
+      {% else %}
+      <span style="color:var(--text-muted);font-size:.75rem">&#10003; Aucune relance en retard</span>
+      {% endif %}
+      <span style="color:var(--text-muted);font-size:.75rem">Dernière activité : {{ s.last_activity }}</span>
+    </div>
+
+    {% if s.revenue > 0 %}
+    <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border);font-size:.8rem;color:var(--text-sec)">
+      Revenu généré :
+      <strong style="color:#10b981">{{ "{:,}".format(s.revenue) }}</strong>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Activity feed -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">&#128337; Activité récente (20 dernières actions)</h2>
+  </div>
+  <div class="table-wrapper">
+    <table class="prospects-table">
+      <thead>
+        <tr>
+          <th>Commercial</th>
+          <th>Prospect</th>
+          <th>Type</th>
+          <th>Résumé</th>
+          <th>Résultat</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in feed %}
+        <tr>
+          <td>
+            <span style="font-weight:600;font-size:.82rem">
+              {{ row.user_name or '—' }}
+            </span>
+          </td>
+          <td>
+            <a href="/prospect/{{ row.prospect_id }}" style="color:var(--accent);font-weight:600;font-size:.82rem">
+              {{ row.prospect_name }}
+            </a>
+          </td>
+          <td>
+            <span class="category-badge">
+              {% if row.type in type_map %}{{ type_map[row.type][1] }} {{ type_map[row.type][0] }}{% else %}{{ row.type }}{% endif %}
+            </span>
+          </td>
+          <td style="max-width:260px;font-size:.8rem;color:var(--text-sec)">
+            {{ row.summary[:80] }}{% if row.summary|length > 80 %}…{% endif %}
+          </td>
+          <td>
+            <span class="status-badge status-{{ row.outcome }}">{{ row.outcome }}</span>
+          </td>
+          <td style="font-size:.8rem;color:var(--text-muted);white-space:nowrap">
+            {{ row.interaction_date }}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="empty-state">
+          <div class="empty-icon">&#128337;</div>
+          <p>Aucune activité enregistrée</p>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
