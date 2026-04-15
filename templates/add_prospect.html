@@ -125,7 +125,6 @@
           <input type="number" name="seo_score" class="form-input" min="0" max="100" placeholder="0 = invisible, 100 = excellent" value="{{ request.form.get('seo_score','') }}">
         </div>
 
-        <!-- Checkboxes -->
         <div class="checkbox-grid">
           <label class="check-item">
             <input type="checkbox" name="has_website" value="1" {% if request.form.get('has_website') %}checked{% endif %}>
@@ -139,7 +138,6 @@
             <input type="checkbox" name="has_facebook" value="1" {% if request.form.get('has_facebook') %}checked{% endif %}>
             <span>&#128100; Facebook</span>
           </label>
-          <!-- TN-specific -->
           <label class="check-item tn-field">
             <input type="checkbox" name="has_modern_menu" value="1" {% if request.form.get('has_modern_menu') %}checked{% endif %}>
             <span>&#127912; Menu board moderne</span>
@@ -152,7 +150,6 @@
             <input type="checkbox" name="has_gmaps_photos" value="1" {% if request.form.get('has_gmaps_photos') %}checked{% endif %}>
             <span>&#128247; Photos Google Maps</span>
           </label>
-          <!-- FR-specific -->
           <label class="check-item fr-field" style="display:none">
             <input type="checkbox" name="has_digital_menu" value="1" {% if request.form.get('has_digital_menu') %}checked{% endif %}>
             <span>&#128203; Menu digital QR</span>
@@ -160,10 +157,6 @@
           <label class="check-item fr-field" style="display:none">
             <input type="checkbox" name="has_online_booking" value="1" {% if request.form.get('has_online_booking') %}checked{% endif %}>
             <span>&#128197; Réservation en ligne</span>
-          </label>
-          <label class="check-item fr-field" style="display:none">
-            <input type="checkbox" name="has_gmaps_photos" value="1">
-            <span>&#128247; Photos Google Maps</span>
           </label>
         </div>
 

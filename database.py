@@ -37,6 +37,8 @@ class _Cursor:
 
     def fetchone(self):  return self._c.fetchone()
     def fetchall(self):  return self._c.fetchall()
+    @property
+    def lastrowid(self): return self._c.lastrowid
 
 
 class _Conn:

@@ -6,7 +6,7 @@ import os
 import sqlite3
 from datetime import datetime, date
 from functools import wraps
-from database import init_db, seed_db, get_db, check_password
+from database import init_db, seed_db, get_db, check_password, compute_score_and_services, compute_france_score_and_services
 from outreach import generate_email, generate_dm, generate_whatsapp
 
 app = Flask(__name__)
@@ -186,6 +186,21 @@ OUTCOMES = [
     ("sans_reponse", "Sans réponse"),
     ("rappel",       "À rappeler"),
 ]
+
+SCORE_RANGES = {
+    "hot":      "score >= 70",
+    "warm":     "score >= 45 AND score < 70",
+    "lukewarm": "score >= 20 AND score < 45",
+    "cold":     "score < 20",
+}
+
+
+def apply_temp_filter(query, temp):
+    clause = SCORE_RANGES.get(temp)
+    if clause:
+        query += f" AND {clause}"
+    return query
+
 
 PRIORITY_CONFIG = {
     "urgent": ("Urgent",  "#ef4444"),
@@ -506,10 +521,7 @@ def marche_tunisie():
     if search:
         query += " AND (name LIKE ? OR category LIKE ? OR address LIKE ?)"
         like = f"%{search}%"; params.extend([like, like, like])
-    if temp_f == "hot":      query += " AND score >= 70"
-    elif temp_f == "warm":   query += " AND score >= 45 AND score < 70"
-    elif temp_f == "lukewarm": query += " AND score >= 20 AND score < 45"
-    elif temp_f == "cold":   query += " AND score < 20"
+    query = apply_temp_filter(query, temp_f)
     order = {"score":"score DESC","rating":"google_rating DESC","name":"name ASC","value":"estimated_value DESC"}.get(sort_by,"score DESC")
     query += f" ORDER BY {order}"
 
@@ -576,10 +588,7 @@ def marche_france():
     if search:
         query += " AND (name LIKE ? OR category LIKE ? OR city LIKE ?)"
         like = f"%{search}%"; params.extend([like, like, like])
-    if temp_f == "hot":      query += " AND score >= 70"
-    elif temp_f == "warm":   query += " AND score >= 45 AND score < 70"
-    elif temp_f == "lukewarm": query += " AND score >= 20 AND score < 45"
-    elif temp_f == "cold":   query += " AND score < 20"
+    query = apply_temp_filter(query, temp_f)
     order = {"score":"score DESC","rating":"google_rating DESC","name":"name ASC"}.get(sort_by,"score DESC")
     query += f" ORDER BY {order}"
 
@@ -963,7 +972,6 @@ def add_prospect():
                 "has_gmaps_photos": int(bool(f.get("has_gmaps_photos"))),
                 "menu_board_quality": f.get("menu_board_quality", "unknown"),
             }
-            from database import compute_score_and_services, compute_france_score_and_services
             if country == "FR":
                 score, services = compute_france_score_and_services(p)
             else:
@@ -998,12 +1006,9 @@ def add_prospect():
                 f.get("next_follow_up",""),
                 session.get("user_id"),
             ))
+            new_id = c.lastrowid
             conn.commit()
-            # Get the new ID
-            c.execute("SELECT id FROM prospects WHERE name=? ORDER BY created_at DESC LIMIT 1", (name,))
-            row = c.fetchone()
             conn.close()
-            new_id = row[0] if row else None
             if new_id:
                 return redirect(url_for("prospect_detail", pid=new_id))
             return redirect(url_for("dashboard"))
@@ -1023,40 +1028,63 @@ def performance():
     c.execute("SELECT id, full_name, role FROM users ORDER BY role, full_name")
     users = [dict(u) for u in c.fetchall()]
 
+    today = date.today().isoformat()
+    month_start = date.today().replace(day=1).isoformat()
+
+    # Batch prospect stats per user (2 queries instead of N*4)
+    c.execute("""SELECT assigned_to, status,
+                        COUNT(*) as cnt,
+                        COALESCE(SUM(estimated_value),0) as rev
+                 FROM prospects WHERE assigned_to IS NOT NULL
+                 GROUP BY assigned_to, status""")
+    prospect_rows = c.fetchall()
+    prospect_stats = {}
+    for r in prospect_rows:
+        uid = r["assigned_to"]
+        if uid not in prospect_stats:
+            prospect_stats[uid] = {"assigned": 0, "won": 0, "revenue": 0, "overdue": 0}
+        if r["status"] != "archived":
+            prospect_stats[uid]["assigned"] += r["cnt"]
+        if r["status"] == "closed_won":
+            prospect_stats[uid]["won"] += r["cnt"]
+            prospect_stats[uid]["revenue"] += r["rev"]
+
+    c.execute("""SELECT assigned_to, COUNT(*) as cnt
+                 FROM prospects WHERE assigned_to IS NOT NULL
+                   AND next_follow_up != '' AND next_follow_up <= ?
+                   AND status NOT IN ('closed_won','closed_lost','archived')
+                 GROUP BY assigned_to""", (today,))
+    for r in c.fetchall():
+        if r["assigned_to"] in prospect_stats:
+            prospect_stats[r["assigned_to"]]["overdue"] = r["cnt"]
+
+    # Batch interaction stats per user (2 queries instead of N*3)
+    c.execute("""SELECT user_id, COUNT(*) as total, MAX(interaction_date) as last_date
+                 FROM interactions WHERE user_id IS NOT NULL
+                 GROUP BY user_id""")
+    interaction_stats = {r["user_id"]: {"total": r["total"], "last": r["last_date"] or "—"}
+                         for r in c.fetchall()}
+
+    c.execute("""SELECT user_id, COUNT(*) as cnt FROM interactions
+                 WHERE user_id IS NOT NULL AND interaction_date >= ?
+                 GROUP BY user_id""", (month_start,))
+    month_stats = {r["user_id"]: r["cnt"] for r in c.fetchall()}
+
     stats = []
     for u in users:
         uid = u["id"]
-        # Prospects assigned to this user
-        c.execute("SELECT COUNT(*) FROM prospects WHERE assigned_to=? AND status!='archived'", (uid,))
-        assigned = c.fetchone()[0]
-        # Prospects won
-        c.execute("SELECT COUNT(*) FROM prospects WHERE assigned_to=? AND status='closed_won'", (uid,))
-        won = c.fetchone()[0]
-        # Interactions logged by this user
-        c.execute("SELECT COUNT(*) FROM interactions WHERE user_id=?", (uid,))
-        interactions = c.fetchone()[0]
-        # Interactions this month
-        month_start = date.today().replace(day=1).isoformat()
-        c.execute("SELECT COUNT(*) FROM interactions WHERE user_id=? AND interaction_date>=?", (uid, month_start))
-        this_month = c.fetchone()[0]
-        # Overdue follow-ups for their prospects
-        c.execute("""SELECT COUNT(*) FROM prospects WHERE assigned_to=? AND next_follow_up!=''
-                     AND next_follow_up<=? AND status NOT IN ('closed_won','closed_lost','archived')""",
-                  (uid, date.today().isoformat()))
-        overdue = c.fetchone()[0]
-        # Revenue from their prospects
-        c.execute("SELECT COALESCE(SUM(estimated_value),0) FROM prospects WHERE assigned_to=? AND status='closed_won'", (uid,))
-        revenue = c.fetchone()[0]
-        # Last activity date
-        c.execute("SELECT MAX(interaction_date) FROM interactions WHERE user_id=?", (uid,))
-        last_activity = c.fetchone()[0] or "—"
-
+        ps  = prospect_stats.get(uid, {"assigned": 0, "won": 0, "revenue": 0, "overdue": 0})
+        ia  = interaction_stats.get(uid, {"total": 0, "last": "—"})
         stats.append({
             **u,
-            "assigned": assigned, "won": won, "interactions": interactions,
-            "this_month": this_month, "overdue": overdue,
-            "revenue": revenue, "last_activity": last_activity,
-            "conversion": round(won / assigned * 100, 1) if assigned else 0,
+            "assigned":     ps["assigned"],
+            "won":          ps["won"],
+            "interactions": ia["total"],
+            "this_month":   month_stats.get(uid, 0),
+            "overdue":      ps["overdue"],
+            "revenue":      ps["revenue"],
+            "last_activity": ia["last"],
+            "conversion": round(ps["won"] / ps["assigned"] * 100, 1) if ps["assigned"] else 0,
         })
 
     # Recent activity feed (last 20 interactions with user info)
