@@ -11,7 +11,22 @@
 </head>
 <body>
 
-  <aside class="sidebar">
+<!-- Mobile top bar -->
+<div class="mobile-header" id="mobileHeader">
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div style="display:flex;align-items:center;gap:.5rem">
+    <div class="brand-logo" style="width:30px;height:30px;font-size:.72rem">OV</div>
+    <span style="font-weight:800;font-size:.9rem">Octo Vision</span>
+  </div>
+  {% if current_user %}
+  <a href="{{ url_for('logout') }}" style="font-size:.75rem;color:var(--text-sec);padding:.4rem .6rem;border:1px solid var(--border);border-radius:6px">Quitter</a>
+  {% endif %}
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">OV</div>
       <div class="brand-text">
@@ -122,6 +137,16 @@
   <div id="toast-container"></div>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  }
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

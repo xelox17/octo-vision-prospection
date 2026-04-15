@@ -98,6 +98,45 @@
 
 </div>
 
+<!-- Charts (admin only) -->
+{% if current_user and current_user.role == 'admin' %}
+<div class="charts-grid" style="margin-top:1.5rem">
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">&#8651; Pipeline CRM</span>
+      <a href="{{ url_for('pipeline') }}" class="chart-link">Voir tout →</a>
+    </div>
+    <div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">&#127757; Marchés TN / FR</span>
+    </div>
+    <div class="chart-wrap"><canvas id="marketChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">&#9889; Score Prospects</span>
+    </div>
+    <div class="chart-wrap"><canvas id="scoreChart"></canvas></div>
+  </div>
+</div>
+<div class="charts-grid charts-grid-2" style="margin-top:.75rem">
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">&#127919; Top Services Demandés</span>
+    </div>
+    <div class="chart-wrap chart-wrap-tall"><canvas id="servicesChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">&#128196; Activité — 7 derniers jours</span>
+    </div>
+    <div class="chart-wrap chart-wrap-tall"><canvas id="activityChart"></canvas></div>
+  </div>
+</div>
+{% endif %}
+
 <!-- Filters -->
 <div class="filters-bar">
   <form method="get" action="{{ url_for('dashboard') }}" id="filterForm" style="display:contents">
@@ -255,6 +294,116 @@
 {% endblock %}
 
 {% block scripts %}
+{% if current_user and current_user.role == 'admin' %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const today = "{{ today }}";
+let searchTimer;
+function debounceSubmit() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
+}
+
+// Chart defaults
+Chart.defaults.color = '#7e879e';
+Chart.defaults.borderColor = '#232840';
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.font.size = 11;
+
+const ACCENT = '#6366f1';
+const COLORS = ['#6366f1','#10b981','#f59e0b','#ec4899','#3b82f6','#ef4444','#8b5cf6','#f97316'];
+const STAGE_COLORS = {
+  'new':'#3b82f6','contacted':'#f59e0b','interested':'#8b5cf6',
+  'proposal_sent':'#ec4899','closed_won':'#10b981','closed_lost':'#ef4444'
+};
+const STAGE_LABELS = {
+  'new':'Nouveau','contacted':'Contacté','interested':'Intéressé',
+  'proposal_sent':'Devis envoyé','closed_won':'Gagné','closed_lost':'Perdu'
+};
+
+fetch('/api/stats').then(r => r.json()).then(data => {
+
+  // 1. Pipeline doughnut
+  const pStages = Object.keys(data.by_status);
+  new Chart(document.getElementById('pipelineChart'), {
+    type: 'doughnut',
+    data: {
+      labels: pStages.map(s => STAGE_LABELS[s] || s),
+      datasets: [{ data: pStages.map(s => data.by_status[s]),
+        backgroundColor: pStages.map(s => STAGE_COLORS[s] || ACCENT),
+        borderWidth: 2, borderColor: '#131620', hoverOffset: 6 }]
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { padding: 12, boxWidth: 10 } } }, cutout: '65%' }
+  });
+
+  // 2. Market doughnut TN/FR
+  const mKeys = Object.keys(data.by_country);
+  new Chart(document.getElementById('marketChart'), {
+    type: 'doughnut',
+    data: {
+      labels: mKeys.map(k => k === 'TN' ? '🇹🇳 Tunisie' : '🇫🇷 France'),
+      datasets: [{ data: mKeys.map(k => data.by_country[k]),
+        backgroundColor: ['#e70013','#002395'], borderWidth: 2, borderColor: '#131620', hoverOffset: 6 }]
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { padding: 12, boxWidth: 10 } } }, cutout: '65%' }
+  });
+
+  // 3. Score distribution doughnut
+  const sDist = data.score_distribution;
+  new Chart(document.getElementById('scoreChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(sDist),
+      datasets: [{ data: Object.values(sDist),
+        backgroundColor: ['#ef4444','#f59e0b','#3b82f6','#6b7280'],
+        borderWidth: 2, borderColor: '#131620', hoverOffset: 6 }]
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { padding: 12, boxWidth: 10 } } }, cutout: '65%' }
+  });
+
+  // 4. Top services horizontal bar
+  if (data.top_services.length) {
+    new Chart(document.getElementById('servicesChart'), {
+      type: 'bar',
+      data: {
+        labels: data.top_services.map(s => s.service.length > 28 ? s.service.slice(0,25)+'…' : s.service),
+        datasets: [{ data: data.top_services.map(s => s.count),
+          backgroundColor: COLORS.slice(0, data.top_services.length),
+          borderRadius: 5, borderSkipped: false }]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: '#1c1f30' }, ticks: { stepSize: 1 } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // 5. Activity line chart
+  new Chart(document.getElementById('activityChart'), {
+    type: 'line',
+    data: {
+      labels: data.activity_7d.map(d => d.date.slice(5)),
+      datasets: [{ data: data.activity_7d.map(d => d.count),
+        borderColor: ACCENT, backgroundColor: 'rgba(99,102,241,.1)',
+        borderWidth: 2, tension: 0.4, fill: true,
+        pointBackgroundColor: ACCENT, pointRadius: 4 }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#1c1f30' } },
+        y: { grid: { color: '#1c1f30' }, ticks: { stepSize: 1 }, min: 0 }
+      }
+    }
+  });
+
+});
+</script>
+{% else %}
 <script>
 const today = "{{ today }}";
 let searchTimer;
@@ -263,4 +412,5 @@ function debounceSubmit() {
   searchTimer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
 }
 </script>
+{% endif %}
 {% endblock %}

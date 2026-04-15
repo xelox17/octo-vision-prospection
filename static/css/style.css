@@ -891,12 +891,61 @@ input, select, textarea { font-family: inherit; }
 .fr-legend-item strong { font-size: .82rem; display: block; margin-bottom: .2rem; }
 .fr-legend-item p { font-size: .75rem; color: var(--text-muted); line-height: 1.4; }
 
+/* ── Charts ─────────────────────────────────────────── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.charts-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+.chart-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.chart-title { font-size: .8rem; font-weight: 700; color: var(--text); }
+.chart-link  { font-size: .75rem; color: var(--accent); }
+.chart-wrap  { position: relative; height: 180px; }
+.chart-wrap-tall { height: 200px; }
+
+/* ── Mobile header ──────────────────────────────────── */
+.mobile-header {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 56px; z-index: 200;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1rem;
+  align-items: center; justify-content: space-between;
+}
+.hamburger {
+  background: none; border: none; padding: .5rem;
+  display: flex; flex-direction: column; gap: 5px; cursor: pointer;
+}
+.hamburger span {
+  display: block; width: 22px; height: 2px;
+  background: var(--text); border-radius: 2px; transition: all .2s;
+}
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.65); z-index: 90;
+}
+.sidebar-overlay.active { display: block; }
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 1400px) {
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
   .kanban-board { grid-template-columns: repeat(3, minmax(200px, 1fr)); }
 }
 @media (max-width: 1100px) {
+  .charts-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-grid-2 { grid-template-columns: 1fr; }
   .three-col-grid { grid-template-columns: 1fr 1fr; }
   .detail-top-grid { grid-template-columns: 1fr; }
   .ai-result-header { flex-direction: column; }
@@ -905,15 +954,43 @@ input, select, textarea { font-family: inherit; }
 @media (max-width: 900px) {
   .two-col-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+  .charts-grid-2 { grid-template-columns: 1fr; }
   .kanban-board { grid-template-columns: repeat(2, minmax(200px, 1fr)); }
   .main-content { padding: 1.25rem 1rem; }
   .three-col-grid { grid-template-columns: 1fr; }
   .quick-steps-grid { grid-template-columns: 1fr; }
   .form-grid-2 { grid-template-columns: 1fr; }
 }
-@media (max-width: 600px) {
-  .sidebar { display: none; }
-  .main-content { margin-left: 0; max-width: 100%; }
+@media (max-width: 768px) {
+  .mobile-header { display: flex; }
+  .sidebar {
+    left: calc(-1 * var(--sidebar-w));
+    transition: left .25s ease;
+    z-index: 150;
+  }
+  .sidebar.mobile-open { left: 0; }
+  .main-content {
+    margin-left: 0;
+    max-width: 100%;
+    padding: 1rem;
+    padding-top: calc(56px + 1rem);
+  }
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .filters-bar { flex-wrap: wrap; gap: .5rem; }
+  .filter-select, .search-input { min-width: unset; flex: 1 1 140px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .charts-grid, .charts-grid-2 { grid-template-columns: 1fr !important; }
+  .action-group { gap: .2rem; }
+  .action-btn { width: 28px; height: 28px; font-size: .7rem; }
+  .page-title { font-size: 1.3rem; }
   .kanban-board { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .header-actions { width: 100%; }
+  .header-actions .btn { flex: 1; text-align: center; justify-content: center; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .stat-value { font-size: 1.25rem; }
+  .main-content { padding: .75rem; padding-top: calc(56px + .75rem); }
 }

@@ -811,19 +811,61 @@ def set_follow_up(pid):
 @app.route("/api/stats")
 @login_required
 def api_stats():
+    from datetime import timedelta
     conn = get_db()
     c = conn.cursor()
-    c.execute("SELECT status, COUNT(*) as count FROM prospects GROUP BY status")
+
+    # Pipeline stages
+    c.execute("SELECT status, COUNT(*) as count FROM prospects WHERE status!='archived' GROUP BY status")
     by_status = {r["status"]: r["count"] for r in c.fetchall()}
-    c.execute("SELECT category, COUNT(*) as count FROM prospects WHERE status!='archived' GROUP BY category ORDER BY count DESC LIMIT 6")
-    by_category = [{"category": r["category"], "count": r["count"]} for r in c.fetchall()]
-    c.execute("SELECT AVG(score) as avg, MAX(score) as max, MIN(score) as min FROM prospects WHERE status!='archived'")
-    score_stats = dict(c.fetchone())
+
+    # Country split
+    c.execute("SELECT country, COUNT(*) as count FROM prospects WHERE status!='archived' GROUP BY country")
+    by_country = {r["country"]: r["count"] for r in c.fetchall()}
+
+    # Top services needed
+    c.execute("SELECT services_needed FROM prospects WHERE status!='archived'")
+    svc_counts = {}
+    for row in c.fetchall():
+        try:
+            svcs = json.loads(row["services_needed"]) if row["services_needed"] else []
+        except Exception:
+            svcs = []
+        for s in svcs:
+            svc_counts[s] = svc_counts.get(s, 0) + 1
+    top_services = [{"service": s, "count": n} for s, n in
+                    sorted(svc_counts.items(), key=lambda x: x[1], reverse=True)[:6]]
+
+    # Activity last 7 days (PostgreSQL-compatible — use Python param)
+    seven_ago = (date.today() - timedelta(days=6)).isoformat()
+    c.execute("SELECT interaction_date, COUNT(*) as count FROM interactions WHERE interaction_date >= ? GROUP BY interaction_date ORDER BY interaction_date", (seven_ago,))
+    raw = {r["interaction_date"]: r["count"] for r in c.fetchall()}
+    activity_7d = [{"date": (date.today() - timedelta(days=6-i)).isoformat(),
+                    "count": raw.get((date.today() - timedelta(days=6-i)).isoformat(), 0)}
+                   for i in range(7)]
+
+    # Score distribution
+    c.execute("SELECT score FROM prospects WHERE status!='archived'")
+    scores = [r[0] for r in c.fetchall()]
+    score_dist = {
+        "Très chaud": sum(1 for s in scores if s >= 70),
+        "Chaud":      sum(1 for s in scores if 45 <= s < 70),
+        "Tiède":      sum(1 for s in scores if 20 <= s < 45),
+        "Froid":      sum(1 for s in scores if s < 20),
+    }
+
     c.execute("SELECT COALESCE(SUM(estimated_value),0) FROM prospects WHERE status='closed_won'")
     total_revenue = c.fetchone()[0]
     conn.close()
-    return jsonify({"by_status": by_status, "by_category": by_category,
-                    "score_stats": score_stats, "total_revenue": total_revenue})
+
+    return jsonify({
+        "by_status":          by_status,
+        "by_country":         by_country,
+        "top_services":       top_services,
+        "activity_7d":        activity_7d,
+        "score_distribution": score_dist,
+        "total_revenue":      total_revenue,
+    })
 
 
 @app.route("/api/ai/analyze/<int:pid>")
