@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu — Pizzeria Napolitana Toulouse</title>
+  <meta name="description" content="La carte complète de la Pizzeria Napolitana à Toulouse. Pizzas napolitaines, pâtes fraîches, antipasti et desserts italiens. Cuisson au feu de bois.">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            napoli: {
+              red:       '#8B1A1A',
+              'red-l':   '#B22222',
+              olive:     '#5C6B2E',
+              cream:     '#FDF6E3',
+              terra:     '#C1683A',
+              'terra-l': '#D4845A',
+              dark:      '#1C1208',
+              muted:     '#6B5B45',
+            }
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans:  ['"Inter"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    html { scroll-behavior: smooth; }
+    .wood-texture { background: linear-gradient(180deg, #1C1208 0%, #2D1E0F 100%); }
+    .section-divider {
+      width: 60px; height: 3px;
+      background: linear-gradient(90deg, #8B1A1A, #C1683A);
+      border-radius: 9999px;
+    }
+    .menu-row {
+      border-bottom: 1px dashed rgba(139,26,26,0.15);
+      transition: background 0.2s;
+    }
+    .menu-row:last-child { border-bottom: none; }
+    .menu-row:hover { background: rgba(193,104,58,0.05); }
+
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .badge-signature { background:#dcfce7; color:#166534; }
+    .badge-bestseller { background:#fef3c7; color:#92400e; }
+    .badge-piquante   { background:#fee2e2; color:#991b1b; }
+    .badge-premium    { background:#ede9fe; color:#4c1d95; }
+    .badge-vege       { background:#d1fae5; color:#065f46; }
+    .badge-new        { background:#dbeafe; color:#1e3a8a; }
+
+    @media print {
+      nav, .no-print { display: none; }
+      body { font-size: 12pt; }
+      .page-break { page-break-before: always; }
+    }
+  </style>
+</head>
+<body class="bg-napoli-cream font-sans text-napoli-dark">
+
+<!-- ── HEADER ──────────────────────────────────────────────────── -->
+<nav class="wood-texture text-white py-4 px-6 sticky top-0 z-50 shadow-xl">
+  <div class="max-w-5xl mx-auto flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-napoli-red flex items-center justify-center text-lg">🍕</div>
+      <div>
+        <div class="font-serif font-bold leading-tight">Pizzeria Napolitana</div>
+        <div class="text-napoli-terra text-xs tracking-widest uppercase">Menu complet</div>
+      </div>
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="tel:+33561218850" class="hidden sm:flex items-center gap-1.5 text-sm text-white/80 hover:text-napoli-terra transition-colors">
+        📞 05 61 21 88 50
+      </a>
+      <a href="index.html" class="text-sm text-white/70 hover:text-white transition-colors">← Accueil</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO MENU ──────────────────────────────────────────────── -->
+<div class="bg-napoli-red text-white py-12 px-6 text-center">
+  <p class="text-napoli-terra text-xs font-medium tracking-[0.3em] uppercase mb-2">Toulouse · Depuis 2009</p>
+  <h1 class="font-serif text-4xl md:text-6xl font-bold mb-3">La Carte</h1>
+  <p class="text-white/70 max-w-xl mx-auto">
+    Tous nos plats sont préparés à la commande avec des ingrédients frais.<br>
+    Pâte sans gluten disponible sur demande <strong class="text-white">+2€</strong>.
+  </p>
+  <!-- Sticky nav interne -->
+  <div class="flex flex-wrap justify-center gap-2 mt-8 text-sm font-medium">
+    <a href="#pizzas" class="bg-white/15 hover:bg-white/25 text-white px-5 py-2 rounded-full transition-colors">🍕 Pizzas</a>
+    <a href="#pizzas-blanches" class="bg-white/15 hover:bg-white/25 text-white px-5 py-2 rounded-full transition-colors">⬜ Bianche</a>
+    <a href="#pates" class="bg-white/15 hover:bg-white/25 text-white px-5 py-2 rounded-full transition-colors">🍝 Pâtes</a>
+    <a href="#antipasti" class="bg-white/15 hover:bg-white/25 text-white px-5 py-2 rounded-full transition-colors">🫒 Antipasti</a>
+    <a href="#desserts" class="bg-white/15 hover:bg-white/25 text-white px-5 py-2 rounded-full transition-colors">🍮 Desserts</a>
+    <a href="#boissons" class="bg-white/15 hover:bg-white/25 text-white px-5 py-2 rounded-full transition-colors">🍷 Boissons</a>
+  </div>
+</div>
+
+<!-- ── MAIN CONTENT ──────────────────────────────────────────── -->
+<main class="max-w-5xl mx-auto px-6 py-14 space-y-16">
+
+  <!-- PIZZAS ROUGES ────────────────────────────────────────── -->
+  <section id="pizzas">
+    <div class="flex items-center gap-4 mb-8">
+      <div>
+        <p class="text-napoli-terra text-xs font-medium tracking-widest uppercase mb-1">Au feu de bois · 485°C</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-bold">Pizzas Rouges</h2>
+      </div>
+      <div class="flex-1 h-px bg-napoli-red/20 ml-4"></div>
+      <span class="text-3xl">🍅</span>
+    </div>
+    <p class="text-napoli-muted text-sm mb-8 italic">Base tomate San Marzano DOP — toutes avec fior di latte sauf mention contraire.</p>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-napoli-red/10 divide-y divide-napoli-red/10 overflow-hidden">
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Margherita</span>
+            <span class="badge badge-signature">⭐ Signature</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Tomate San Marzano, mozzarella di bufala DOP, basilic frais, huile d'olive extra vierge</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">13 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Napolitana</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Tomate San Marzano, anchois de Cetara, câpres de Pantelleria, olives noires Gaeta, origan séché</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">14 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Diavola</span>
+            <span class="badge badge-piquante">🌶 Piquante</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Tomate, fior di latte, salami piccante de Calabre, piment doux, basilic, huile piquante</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">15 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Prosciutto e Rucola</span>
+            <span class="badge badge-bestseller">🏆 Best-seller</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Tomate, fior di latte, jambon San Daniele affiné 24 mois, roquette sauvage, copeaux de parmesan, huile de truffe</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">17 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Salsiccia e Friarielli</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Tomate, fior di latte, saucisse de porc napolitaine, broccoletti sautés à l'ail, piment, parmesan</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">16 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Melanzane e Pomodorini</span>
+            <span class="badge badge-vege">🌿 Végé</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Tomate, fior di latte, aubergines grillées, tomates cerises confites, basilic, parmesan, ail confit</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">14 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Bresaola e Burrata</span>
+            <span class="badge badge-new">✨ Nouveauté</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Tomate, fior di latte, bresaola de Valtellina, burrata des Pouilles, cerises, roquette, balsamique</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">18 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Capricciosa</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Tomate, fior di latte, jambon cuit, champignons porcini, artichaut, olives noires, œuf de ferme</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">16 €</div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- PIZZAS BLANCHES ───────────────────────────────────────── -->
+  <section id="pizzas-blanches">
+    <div class="flex items-center gap-4 mb-8">
+      <div>
+        <p class="text-napoli-terra text-xs font-medium tracking-widest uppercase mb-1">Sans tomate</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-bold">Pizzas Bianche</h2>
+      </div>
+      <div class="flex-1 h-px bg-napoli-red/20 ml-4"></div>
+      <span class="text-3xl">⬜</span>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-napoli-red/10 divide-y divide-napoli-red/10 overflow-hidden">
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Quattro Formaggi</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Fior di latte, gorgonzola piccante, pecorino romano, ricotta di bufala, noix de Grenoble, miel de truffe</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">16 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Funghi e Tartufo</span>
+            <span class="badge badge-premium">✨ Premium</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Crème de truffe noire, fior di latte, champignons porcini séchés, parmesan 24 mois, copeaux de truffe, huile de truffe blanche</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">18 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Zucchine e Menta</span>
+            <span class="badge badge-vege">🌿 Végé</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Crème de courgettes, fior di latte, courgettes grillées, menthe fraîche, pistaches, citron de Sicile</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">14 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Patate e Rosmarino</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Fior di latte, pommes de terre rôties, romarin frais, ail confit, parmesan, lard fumé croustillant</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">15 €</div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- PÂTES ────────────────────────────────────────────────── -->
+  <section id="pates">
+    <div class="flex items-center gap-4 mb-8">
+      <div>
+        <p class="text-napoli-terra text-xs font-medium tracking-widest uppercase mb-1">Fraîches, maison</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-bold">Pasta</h2>
+      </div>
+      <div class="flex-1 h-px bg-napoli-red/20 ml-4"></div>
+      <span class="text-3xl">🍝</span>
+    </div>
+    <p class="text-napoli-muted text-sm mb-8 italic">Toutes nos pâtes sont fabriquées maison chaque matin avec de la farine de blé dur de Puglia.</p>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-napoli-red/10 divide-y divide-napoli-red/10 overflow-hidden">
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Carbonara Romana</span>
+            <span class="badge badge-bestseller">🏆 Best-seller</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Spaghetti, guanciale de Lazio snacké, jaunes d'œuf bio, pecorino romano affiné, poivre noir concassé</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">15 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Cacio e Pepe</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Rigatoni, pecorino romano affiné 18 mois, poivre noir de Sarawak, huile d'olive première pression</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">14 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Amatriciana</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Bucatini, guanciale croustillant, tomate San Marzano, pecorino romano, piment doux de Calabre</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">14 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Vongole</span>
+            <span class="badge badge-premium">🐚 Mer</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Linguine, palourdes fraîches, vin blanc sec, ail, persil plat, huile d'olive, piment</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">18 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Lasagne al Forno</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Pâtes fraîches maison, ragù de bœuf Charolais mijoté 6h, béchamel, parmesan, basilic</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">16 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Pesto di Truffe</span>
+            <span class="badge badge-vege">🌿 Végé</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Trofie, pesto maison aux pistaches et truffe noire, parmesan, tomates cerises, basilic</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">15 €</div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ANTIPASTI ───────────────────────────────────────────── -->
+  <section id="antipasti">
+    <div class="flex items-center gap-4 mb-8">
+      <div>
+        <p class="text-napoli-terra text-xs font-medium tracking-widest uppercase mb-1">Pour commencer</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-bold">Antipasti</h2>
+      </div>
+      <div class="flex-1 h-px bg-napoli-red/20 ml-4"></div>
+      <span class="text-3xl">🫒</span>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-napoli-red/10 divide-y divide-napoli-red/10 overflow-hidden">
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Burrata e Pomodorini</span>
+            <span class="badge badge-signature">⭐ Incontournable</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Burrata crémeuse des Pouilles, tomates cerises confites, pesto maison, fleur de sel, bruschetta grillée</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">12 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Antipasto della Casa</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Assortiment de charcuteries (prosciutto, salami, bresaola), fromages affinés, olives marinées, bruschetta, légumes grillés</p>
+          <p class="text-napoli-terra text-xs mt-1">Pour 2 personnes recommandé</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">19 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Bruschetta Classica</span>
+            <span class="badge badge-vege">🌿 Végé</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Pain de campagne grillé au feu de bois, tomates fraîches, ail frotté, basilic, huile d'olive extra vierge</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">7 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Supplì al Telefono</span>
+          </div>
+          <p class="text-napoli-muted text-sm">3 croquettes de riz napolitaines au cœur de mozzarella fondue, sauce tomate maison pour tremper</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">9 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Carpaccio di Manzo</span>
+            <span class="badge badge-premium">✨ Premium</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Fines tranches de bœuf charolais, copeaux de parmesan, câpres, roquette, citron, huile de truffe</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">14 €</div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- DESSERTS ───────────────────────────────────────────── -->
+  <section id="desserts">
+    <div class="flex items-center gap-4 mb-8">
+      <div>
+        <p class="text-napoli-terra text-xs font-medium tracking-widest uppercase mb-1">Pour finir</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-bold">Dolci</h2>
+      </div>
+      <div class="flex-1 h-px bg-napoli-red/20 ml-4"></div>
+      <span class="text-3xl">🍮</span>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-napoli-red/10 divide-y divide-napoli-red/10 overflow-hidden">
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Tiramisù della Nonna</span>
+            <span class="badge badge-bestseller">🏆 Classique</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Recette originale de la Nonna Rosa — mascarpone, savoiardi, café napolitain, cacao de Modica, marsala</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">8 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Panna Cotta Vanille</span>
+          </div>
+          <p class="text-napoli-muted text-sm">Panna cotta à la vanille de Madagascar, coulis de fruits rouges, pistaches de Sicile concassées</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">7 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Cannoli Siciliani</span>
+          </div>
+          <p class="text-napoli-muted text-sm">2 cannoli croustillants, crème de ricotta sucrée, éclats de pistache, zeste d'orange confite</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">8 €</div>
+      </div>
+
+      <div class="menu-row px-6 py-4 flex gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-serif font-bold text-lg">Gelato Artigianale</span>
+          </div>
+          <p class="text-napoli-muted text-sm">3 boules de glace artisanale au choix — Pistache de Sicile · Stracciatella · Citron de Sorrente · Chocolat noir</p>
+        </div>
+        <div class="text-napoli-red font-bold text-lg whitespace-nowrap self-center">6 €</div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- BOISSONS ───────────────────────────────────────────── -->
+  <section id="boissons">
+    <div class="flex items-center gap-4 mb-8">
+      <div>
+        <p class="text-napoli-terra text-xs font-medium tracking-widest uppercase mb-1">Sélection italienne</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-bold">Boissons</h2>
+      </div>
+      <div class="flex-1 h-px bg-napoli-red/20 ml-4"></div>
+      <span class="text-3xl">🍷</span>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Vins -->
+      <div>
+        <h3 class="font-serif text-xl font-semibold mb-4 text-napoli-red flex items-center gap-2">
+          🍷 Vins
+        </h3>
+        <div class="bg-white rounded-2xl shadow-sm border border-napoli-red/10 divide-y divide-napoli-red/10 overflow-hidden">
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Chianti Classico DOCG</div>
+              <div class="text-sm text-napoli-muted">Toscane — Verre</div>
+            </div>
+            <div class="text-napoli-red font-bold">6 €</div>
+          </div>
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Chianti Classico DOCG</div>
+              <div class="text-sm text-napoli-muted">Toscane — Bouteille 75cl</div>
+            </div>
+            <div class="text-napoli-red font-bold">28 €</div>
+          </div>
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Primitivo di Manduria</div>
+              <div class="text-sm text-napoli-muted">Puglia — Bouteille 75cl</div>
+            </div>
+            <div class="text-napoli-red font-bold">32 €</div>
+          </div>
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Pinot Grigio delle Venezie</div>
+              <div class="text-sm text-napoli-muted">Blanc · Bouteille 75cl</div>
+            </div>
+            <div class="text-napoli-red font-bold">26 €</div>
+          </div>
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Prosecco Brut DOC</div>
+              <div class="text-sm text-napoli-muted">Pétillant · Flûte</div>
+            </div>
+            <div class="text-napoli-red font-bold">7 €</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Softs & Bières -->
+      <div>
+        <h3 class="font-serif text-xl font-semibold mb-4 text-napoli-terra flex items-center gap-2">
+          🍺 Bières & Softs
+        </h3>
+        <div class="bg-white rounded-2xl shadow-sm border border-napoli-red/10 divide-y divide-napoli-red/10 overflow-hidden">
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Peroni Nastro Azzurro</div>
+              <div class="text-sm text-napoli-muted">Bière italienne — 33cl</div>
+            </div>
+            <div class="text-napoli-red font-bold">5 €</div>
+          </div>
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Moretti La Rossa</div>
+              <div class="text-sm text-napoli-muted">Bière ambrée — 33cl</div>
+            </div>
+            <div class="text-napoli-red font-bold">5,5 €</div>
+          </div>
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">San Pellegrino</div>
+              <div class="text-sm text-napoli-muted">Eau pétillante — 75cl</div>
+            </div>
+            <div class="text-napoli-red font-bold">4 €</div>
+          </div>
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Limonade maison</div>
+              <div class="text-sm text-napoli-muted">Citron de Sorrente, menthe</div>
+            </div>
+            <div class="text-napoli-red font-bold">4,5 €</div>
+          </div>
+
+          <div class="menu-row px-5 py-3 flex justify-between items-center">
+            <div>
+              <div class="font-medium">Espresso napolitain</div>
+              <div class="text-sm text-napoli-muted">Café Kimbo — Naples</div>
+            </div>
+            <div class="text-napoli-red font-bold">2,5 €</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- FORMULES ───────────────────────────────────────────── -->
+  <section>
+    <div class="bg-napoli-red text-white rounded-2xl p-8 text-center">
+      <h2 class="font-serif text-3xl font-bold mb-2">Formule Déjeuner</h2>
+      <p class="text-white/80 mb-6">Du mardi au vendredi · 12h00 – 14h30</p>
+      <div class="grid sm:grid-cols-2 gap-6 max-w-xl mx-auto">
+        <div class="bg-white/10 rounded-xl p-5">
+          <div class="text-2xl font-bold mb-1">16 €</div>
+          <div class="font-semibold mb-2">Formule Pizza</div>
+          <div class="text-sm text-white/75">1 pizza au choix + 1 dessert + 1 boisson (eau ou café)</div>
+        </div>
+        <div class="bg-white/10 rounded-xl p-5">
+          <div class="text-2xl font-bold mb-1">19 €</div>
+          <div class="font-semibold mb-2">Formule Complète</div>
+          <div class="text-sm text-white/75">1 antipasto + 1 pizza ou pasta + 1 dessert + 1 boisson</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── FOOTER ──────────────────────────────────────────────── -->
+<footer class="wood-texture text-white py-10 px-6 text-center">
+  <div class="flex items-center justify-center gap-3 mb-4">
+    <div class="w-10 h-10 rounded-full bg-napoli-red flex items-center justify-center text-xl">🍕</div>
+    <div class="font-serif text-xl font-bold">Pizzeria Napolitana</div>
+  </div>
+  <p class="text-white/60 text-sm mb-4">14 Rue de la Colombette · 31000 Toulouse</p>
+  <div class="flex flex-wrap justify-center gap-4 text-sm">
+    <a href="tel:+33561218850" class="text-napoli-terra hover:text-white transition-colors">📞 05 61 21 88 50</a>
+    <a href="https://instagram.com/pizzanapolitana_tlse" target="_blank" class="text-napoli-terra hover:text-white transition-colors">📸 @pizzanapolitana_tlse</a>
+    <a href="index.html" class="text-napoli-terra hover:text-white transition-colors">🏠 Accueil</a>
+  </div>
+  <p class="text-white/30 text-xs mt-6">© 2024 Pizzeria Napolitana — Site réalisé par <strong class="text-napoli-terra">Octo Vision Digital</strong></p>
+</footer>
+
+<script>
+// Smooth highlight on anchor click
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+</body>
+</html>

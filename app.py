@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, Response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, Response, send_from_directory
 import csv
 import io
 import json
@@ -1195,6 +1195,16 @@ def export_csv():
     filename = f"prospects{suffix}_{date.today().isoformat()}.csv"
     return Response(gen(), mimetype="text/csv",
                     headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+
+# ─── Sites statiques clients ──────────────────────────────────────────────────
+
+
+@app.route("/sites/<site>/")
+@app.route("/sites/<site>/<path:filename>")
+def serve_site(site, filename="index.html"):
+    sites_dir = os.path.join(os.path.dirname(__file__), "sites")
+    return send_from_directory(os.path.join(sites_dir, site), filename)
 
 
 init_db()

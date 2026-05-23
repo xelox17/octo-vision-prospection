@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizzeria Napolitana — Toulouse</title>
+<meta name="description" content="Pizzeria Napolitana à Toulouse. Pizzas napolitaines authentiques cuites au feu de bois, pâtes fraîches maison. 7 Rue Saint-Rome, Toulouse.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Restaurant","name":"Pizzeria Napolitana","cuisineType":"Italian","address":{"@type":"PostalAddress","streetAddress":"7 Rue Saint-Rome","addressLocality":"Toulouse","postalCode":"31000","addressCountry":"FR"},"telephone":"+33561218850","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.3","reviewCount":"198"}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a;--bg2:#0f0f0f;--bg3:#141414;
+  --glass:rgba(255,255,255,.05);--glass-b:rgba(255,255,255,.09);
+  --warm:#E87A2A;--gold:#D4A853;--ember:#FF4500;
+  --tp:#F5F0EB;--ts:rgba(245,240,235,.55);--tm:rgba(245,240,235,.28);
+  --glow:0 0 40px rgba(232,122,42,.28);--glow2:0 0 80px rgba(232,122,42,.45);
+  --r:16px;--r2:24px;--ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tp);font-family:'Inter',sans-serif;overflow-x:hidden;cursor:none}
+@media(pointer:coarse){body{cursor:auto}}
+img{display:block;width:100%;height:100%;object-fit:cover}
+a{text-decoration:none;color:inherit}
+button{border:none;background:none;font-family:inherit;cursor:none}
+@media(pointer:coarse){button{cursor:pointer}}
+
+/* grain */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.038;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* cursor */
+#cur{position:fixed;width:10px;height:10px;background:var(--warm);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;box-shadow:0 0 18px var(--warm),0 0 36px rgba(232,122,42,.35);will-change:transform}
+#cur-r{position:fixed;width:38px;height:38px;border:1px solid rgba(232,122,42,.38);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);will-change:transform;transition:width .35s,height .35s,border-color .3s}
+body.ch #cur{width:18px;height:18px;background:var(--gold)}
+body.ch #cur-r{width:58px;height:58px;border-color:rgba(212,168,83,.4)}
+@media(pointer:coarse){#cur,#cur-r{display:none}}
+
+/* NAV */
+#nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:28px 52px;display:flex;align-items:center;justify-content:space-between;transition:padding .4s var(--ease),background .4s,backdrop-filter .4s}
+#nav.s{padding:16px 52px;background:rgba(10,10,10,.85);backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nlogo{display:flex;align-items:center;gap:14px}
+.nlogo-i{width:38px;height:38px;background:var(--warm);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:var(--glow);flex-shrink:0}
+.nlogo-t{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;line-height:1.2}
+.nlogo-s{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--warm)}
+.nlinks{display:flex;align-items:center;gap:36px;font-size:.85rem;font-weight:500;color:var(--ts)}
+.nlinks a{transition:color .25s;position:relative}
+.nlinks a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--warm);transition:width .3s}
+.nlinks a:hover{color:var(--tp)}
+.nlinks a:hover::after{width:100%}
+.ncta{background:var(--warm);color:#0a0a0a;padding:10px 26px;border-radius:9999px;font-size:.85rem;font-weight:700;transition:all .3s;box-shadow:var(--glow);cursor:none}
+.ncta:hover{background:var(--gold);transform:translateY(-2px);box-shadow:var(--glow2)}
+@media(pointer:coarse){.ncta{cursor:pointer}}
+#burger{display:none;flex-direction:column;gap:5px;padding:8px;cursor:pointer;z-index:502}
+#burger span{display:block;width:24px;height:1.5px;background:var(--tp);transition:all .3s;border-radius:2px}
+#mmenu{display:none;position:fixed;inset:0;background:rgba(10,10,10,.97);backdrop-filter:blur(30px);z-index:501;flex-direction:column;align-items:center;justify-content:center;gap:44px}
+#mmenu.open{display:flex}
+#mmenu a{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--tp);transition:color .2s}
+#mmenu a:hover{color:var(--warm)}
+#mc{position:absolute;top:24px;right:28px;background:none;border:none;color:var(--ts);font-size:2rem;cursor:pointer;line-height:1}
+@media(max-width:768px){#nav{padding:20px 24px}.nlinks{display:none}#nav.s{padding:14px 24px}#burger{display:flex}}
+
+/* HERO */
+#hero{position:relative;height:100vh;min-height:680px;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center}
+#pc{position:absolute;inset:0;pointer-events:none;z-index:1}
+.hbg{position:absolute;inset:0;z-index:0;
+  background:radial-gradient(ellipse 90% 60% at 50% 85%,rgba(232,122,42,.13) 0%,transparent 55%),
+             radial-gradient(ellipse 60% 40% at 20% 95%,rgba(255,69,0,.08) 0%,transparent 50%),#0a0a0a}
+.himg{position:absolute;inset:0;z-index:0;background:url('https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=1800&q=80') center/cover no-repeat;opacity:.13;filter:saturate(.4)}
+.hhaze{position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to top,rgba(232,122,42,.07),transparent);pointer-events:none;z-index:2;animation:haze 5s ease-in-out infinite}
+@keyframes haze{0%,100%{opacity:.7;transform:scaleX(1)}50%{opacity:1;transform:scaleX(1.015)}}
+.hcontent{position:relative;z-index:3;max-width:900px;padding:0 28px}
+.hlabel{display:inline-flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--glass-b);backdrop-filter:blur(20px);padding:8px 22px;border-radius:9999px;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--warm);margin-bottom:36px}
+.hlabel-dot{width:6px;height:6px;background:var(--warm);border-radius:50%;animation:dot-pulse 2s ease infinite}
+@keyframes dot-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+.htitle{font-family:'Playfair Display',serif;font-size:clamp(3rem,8vw,7rem);font-weight:700;line-height:1.04;letter-spacing:-.025em;margin-bottom:28px}
+.htitle-main{display:block;text-shadow:1px 1px 0 rgba(232,122,42,.25),2px 2px 0 rgba(232,122,42,.15),4px 4px 0 rgba(232,122,42,.08),0 0 80px rgba(232,122,42,.18)}
+.htitle-accent{display:block;font-style:italic;color:transparent;-webkit-text-stroke:1.5px rgba(232,122,42,.65);font-size:.82em}
+.hsub{color:var(--ts);font-size:1.1rem;line-height:1.75;max-width:540px;margin:0 auto 52px}
+.hbtns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn-p{display:inline-flex;align-items:center;gap:10px;background:var(--warm);color:#0a0a0a;padding:16px 38px;border-radius:9999px;font-weight:700;font-size:.95rem;transition:all .3s;box-shadow:var(--glow);cursor:none}
+.btn-p:hover{background:var(--gold);transform:translateY(-3px);box-shadow:var(--glow2)}
+@media(pointer:coarse){.btn-p{cursor:pointer}}
+.btn-g{display:inline-flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--glass-b);backdrop-filter:blur(20px);color:var(--tp);padding:16px 38px;border-radius:9999px;font-weight:500;font-size:.95rem;transition:all .3s;cursor:none}
+.btn-g:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);transform:translateY(-2px)}
+@media(pointer:coarse){.btn-g{cursor:pointer}}
+.hscroll{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--tm);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;animation:sbounce 2.2s ease infinite}
+@keyframes sbounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(9px)}}
+
+/* STATS BAR */
+.statsbar{background:rgba(15,15,15,1);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);padding:28px 52px}
+.statsbar-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.stat-item{text-align:center}
+.stat-val{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--warm);display:block;line-height:1}
+.stat-lbl{font-size:.72rem;color:var(--ts);margin-top:6px;letter-spacing:.06em}
+@media(max-width:640px){.statsbar{padding:24px}.statsbar-inner{grid-template-columns:repeat(2,1fr)}}
+
+/* SECTION UTILS */
+.sp{padding:120px 52px}
+@media(max-width:768px){.sp{padding:80px 24px}}
+.slbl{display:flex;align-items:center;gap:12px;font-size:.72rem;letter-spacing:.25em;text-transform:uppercase;color:var(--warm);font-weight:600;margin-bottom:18px}
+.slbl::before{content:'';width:30px;height:1px;background:var(--warm)}
+.stitle{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.8rem);font-weight:700;line-height:1.1;margin-bottom:14px}
+.ssub{color:var(--ts);font-size:.95rem;line-height:1.75;max-width:480px}
+.reveal{opacity:0;transform:translateY(36px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.reveal.v{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}.d5{transition-delay:.5s}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* EXPÉRIENCE */
+#exp{background:var(--bg2);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+.exp-inner{max-width:1400px;margin:0 auto}
+.jscroll{overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:8px;cursor:grab}
+.jscroll:active{cursor:grabbing}
+.jscroll::-webkit-scrollbar{display:none}
+.jtrack{display:flex;gap:20px;width:max-content;padding-bottom:4px}
+.jcard{flex:0 0 300px;scroll-snap-align:start;background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r2);padding:36px 28px;position:relative;overflow:hidden;transition:all .45s var(--ease);transform-style:preserve-3d}
+.jcard::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 80% at 50% 110%,rgba(232,122,42,.09),transparent);opacity:0;transition:opacity .4s}
+.jcard:hover::before{opacity:1}
+.jcard:hover{border-color:rgba(232,122,42,.32);box-shadow:var(--glow);transform:translateY(-8px)}
+.jnum{font-family:'Playfair Display',serif;font-size:3.5rem;font-weight:700;color:rgba(232,122,42,.12);line-height:1;margin-bottom:20px}
+.jicon{width:44px;height:44px;background:rgba(232,122,42,.1);border:1px solid rgba(232,122,42,.2);border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--warm);margin-bottom:18px}
+.jtitle{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;margin-bottom:10px}
+.jdesc{color:var(--ts);font-size:.875rem;line-height:1.72}
+.jtag{display:inline-block;background:rgba(232,122,42,.1);border:1px solid rgba(232,122,42,.2);color:var(--warm);padding:4px 12px;border-radius:9999px;font-size:.7rem;font-weight:600;margin-top:18px}
+
+/* CARTE */
+#carte{max-width:1400px;margin:0 auto}
+.mtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:48px}
+.mtab{padding:10px 24px;border-radius:9999px;font-size:.85rem;font-weight:500;color:var(--ts);background:var(--glass);border:1px solid var(--glass-b);transition:all .3s;cursor:none}
+.mtab:hover{color:var(--tp);border-color:rgba(232,122,42,.3)}
+.mtab.ac{background:var(--warm);border-color:var(--warm);color:#0a0a0a;box-shadow:var(--glow)}
+@media(pointer:coarse){.mtab{cursor:pointer}}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.mcard{background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r2);overflow:hidden;transition:all .4s var(--ease);transform-style:preserve-3d;will-change:transform}
+.mcard:hover{border-color:rgba(232,122,42,.25);box-shadow:var(--glow)}
+.mcard.h{display:none}
+.mcard-img{height:190px;overflow:hidden;position:relative}
+.mcard-img img{transition:transform .55s var(--ease)}
+.mcard:hover .mcard-img img{transform:scale(1.06)}
+.mcard-img-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,10,10,.65),transparent 55%)}
+.mbadges{position:absolute;top:12px;left:12px;display:flex;gap:6px;flex-wrap:wrap}
+.mbadge{padding:3px 10px;border-radius:9999px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;backdrop-filter:blur(12px)}
+.mb-star{background:rgba(212,168,83,.18);border:1px solid rgba(212,168,83,.38);color:var(--gold)}
+.mb-new{background:rgba(232,122,42,.18);border:1px solid rgba(232,122,42,.38);color:var(--warm)}
+.mb-vege{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.28);color:#4ade80}
+.mb-hot{background:rgba(255,69,0,.14);border:1px solid rgba(255,69,0,.28);color:var(--ember)}
+.mcard-body{padding:22px}
+.mcard-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+.mcard-name{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700}
+.mcard-price{color:var(--warm);font-weight:700;font-size:1.05rem;white-space:nowrap}
+.mcard-desc{color:var(--ts);font-size:.82rem;line-height:1.65}
+
+/* ATMOSPHERE */
+#atm{background:var(--bg2);border-top:1px solid rgba(255,255,255,.06)}
+.atm-inner{max-width:1300px;margin:0 auto}
+.bgrid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto;gap:14px}
+.bi{border-radius:var(--r);overflow:hidden;position:relative;cursor:none}
+@media(pointer:coarse){.bi{cursor:pointer}}
+.bi img{transition:transform .6s var(--ease);will-change:transform;display:block;width:100%;height:100%;object-fit:cover}
+.bi:hover img{transform:scale(1.07)}
+.biov{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,10,10,.78) 0%,transparent 52%);opacity:0;transition:opacity .35s;display:flex;align-items:flex-end;padding:18px}
+.bi:hover .biov{opacity:1}
+.bicap{font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;transform:translateY(10px);transition:transform .3s .05s}
+.bi:hover .bicap{transform:translateY(0)}
+.bi1{grid-column:span 2;height:380px}
+.bi2{height:380px}
+.bi3,.bi4{height:220px}
+.bi5{grid-column:span 1;height:220px}
+@media(max-width:768px){.bgrid{grid-template-columns:1fr 1fr}.bi1{grid-column:span 2;height:260px}.bi2{height:260px}.bi3,.bi4,.bi5{height:180px}}
+@media(max-width:480px){.bgrid{grid-template-columns:1fr}.bi1,.bi2,.bi3,.bi4,.bi5{grid-column:span 1;height:220px}}
+.ig-cta{display:flex;align-items:center;gap:10px;margin-top:28px;color:var(--ts);font-size:.875rem;transition:color .25s}
+.ig-cta:hover{color:var(--warm)}
+
+/* REVIEWS */
+#avis{max-width:1400px;margin:0 auto}
+.rh{display:flex;align-items:center;gap:36px;margin-bottom:60px;flex-wrap:wrap}
+.rscore{font-family:'Playfair Display',serif;font-size:5.5rem;font-weight:700;color:var(--warm);line-height:1;text-shadow:0 0 60px rgba(232,122,42,.3)}
+.rdet{flex:1}
+.rstars{display:flex;gap:4px;margin-bottom:8px}
+.rstar{color:var(--gold);width:20px;height:20px}
+.rcount{color:var(--ts);font-size:.88rem;margin-bottom:4px}
+.rsrc{font-size:.72rem;color:var(--tm)}
+.rbars{margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.rbar{display:flex;align-items:center;gap:10px}
+.rlbl{font-size:.7rem;color:var(--tm);width:8px;flex-shrink:0}
+.rtrack{flex:1;height:3px;background:rgba(255,255,255,.07);border-radius:9999px;overflow:hidden;max-width:140px}
+.rfill{height:100%;background:var(--gold);border-radius:9999px}
+
+/* Carousel */
+.cvp{overflow:hidden;position:relative}
+.ctrack{display:flex;gap:20px;transition:transform .6s var(--ease);will-change:transform}
+.rcard{flex:0 0 360px;background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r2);padding:28px;transition:border-color .3s,box-shadow .3s}
+.rcard.ft{border-color:rgba(232,122,42,.3);box-shadow:var(--glow)}
+.rcstars{display:flex;gap:3px;margin-bottom:18px}
+.rcstar{color:var(--gold);width:16px;height:16px}
+.rctext{color:var(--ts);font-size:.875rem;line-height:1.8;font-style:italic;margin-bottom:22px}
+.rcaut{display:flex;align-items:center;gap:12px}
+.rcav{width:38px;height:38px;border-radius:50%;background:rgba(232,122,42,.12);border:1px solid rgba(232,122,42,.2);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--warm);font-size:.85rem;flex-shrink:0}
+.rcname{font-weight:600;font-size:.88rem}
+.rcdate{color:var(--tm);font-size:.72rem}
+.ccontrols{display:flex;align-items:center;gap:14px;margin-top:36px}
+.cbtn{width:46px;height:46px;border-radius:50%;background:var(--glass);border:1px solid var(--glass-b);display:flex;align-items:center;justify-content:center;color:var(--tp);transition:all .3s;cursor:none}
+.cbtn:hover{background:var(--warm);border-color:var(--warm);color:#0a0a0a;box-shadow:var(--glow)}
+@media(pointer:coarse){.cbtn{cursor:pointer}}
+.cdots{display:flex;gap:7px}
+.cdot{width:6px;height:6px;border-radius:9999px;background:rgba(255,255,255,.18);transition:all .3s;cursor:none}
+.cdot.ac{width:22px;background:var(--warm);box-shadow:0 0 10px rgba(232,122,42,.4)}
+@media(pointer:coarse){.cdot{cursor:pointer}}
+@media(max-width:640px){.rcard{flex:0 0 290px}}
+
+/* CONTACT */
+#contact{background:var(--bg2);border-top:1px solid rgba(255,255,255,.06)}
+.ct-inner{max-width:1200px;margin:0 auto}
+.ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+@media(max-width:768px){.ct-grid{grid-template-columns:1fr}}
+.ctitem{display:flex;gap:14px;align-items:flex-start;padding:18px;background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r);margin-bottom:14px;transition:all .3s}
+.ctitem:hover{border-color:rgba(232,122,42,.25);box-shadow:var(--glow)}
+.cticon{width:42px;height:42px;flex-shrink:0;background:rgba(232,122,42,.1);border:1px solid rgba(232,122,42,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--warm)}
+.ctlbl{font-size:.68rem;color:var(--tm);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.ctval{font-weight:600;font-size:.9rem}
+.ctsub{font-size:.78rem;color:var(--ts);margin-top:2px}
+.ctmap{border-radius:var(--r2);overflow:hidden;border:1px solid var(--glass-b);height:360px}
+.ctmap iframe{width:100%;height:100%;border:none;filter:invert(.9) hue-rotate(180deg) saturate(.45) brightness(.85)}
+.ctcta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;background:var(--warm);border-radius:var(--r);font-weight:700;font-size:1rem;color:#0a0a0a;margin-top:20px;transition:all .3s;box-shadow:var(--glow);cursor:none}
+.ctcta:hover{background:var(--gold);transform:translateY(-2px);box-shadow:var(--glow2)}
+@media(pointer:coarse){.ctcta{cursor:pointer}}
+
+/* FOOTER */
+footer{max-width:1400px;margin:0 auto;padding:72px 52px 44px}
+@media(max-width:768px){footer{padding:52px 24px 36px}}
+.fg{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:48px;margin-bottom:56px}
+@media(max-width:1024px){.fg{grid-template-columns:1fr 1fr;gap:32px}}
+@media(max-width:480px){.fg{grid-template-columns:1fr}}
+.fbrand-tag{color:var(--ts);font-size:.85rem;line-height:1.75;margin-top:14px;max-width:270px}
+.fct{font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--tm);margin-bottom:18px}
+.flinks{display:flex;flex-direction:column;gap:11px}
+.flinks a{font-size:.85rem;color:var(--ts);transition:color .25s}
+.flinks a:hover{color:var(--warm)}
+.fbtm{display:flex;justify-content:space-between;align-items:center;padding-top:28px;border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap;gap:10px;font-size:.78rem;color:var(--tm)}
+.fbtm-brand{color:var(--warm)}
+.glow-sep{height:1px;background:linear-gradient(90deg,transparent,rgba(232,122,42,.38),transparent);max-width:1400px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cur"></div>
+<div id="cur-r"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nlogo" aria-label="Pizzeria Napolitana">
+    <div class="nlogo-i">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+    </div>
+    <div>
+      <div class="nlogo-t">Pizzeria Napolitana</div>
+      <div class="nlogo-s">Toulouse · Depuis 2009</div>
+    </div>
+  </a>
+  <div class="nlinks">
+    <a href="#exp">L'Expérience</a>
+    <a href="#carte">La Carte</a>
+    <a href="#atm">Galerie</a>
+    <a href="#avis">Avis</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <a href="tel:+33561218850" class="ncta">Réserver</a>
+  <button id="burger" aria-label="Menu" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div id="mmenu">
+  <button id="mc" onclick="toggleMenu()">&#x2715;</button>
+  <a href="#exp" onclick="toggleMenu()">L'Expérience</a>
+  <a href="#carte" onclick="toggleMenu()">La Carte</a>
+  <a href="#atm" onclick="toggleMenu()">Galerie</a>
+  <a href="#avis" onclick="toggleMenu()">Avis</a>
+  <a href="#contact" onclick="toggleMenu()">Contact</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="pc"></canvas>
+  <div class="hbg"></div>
+  <div class="himg"></div>
+  <div class="hhaze"></div>
+  <div class="hcontent">
+    <div class="hlabel">
+      <span class="hlabel-dot"></span>
+      Depuis 2009 &mdash; Toulouse, France
+    </div>
+    <h1 class="htitle">
+      <span class="htitle-main">La vraie pizza</span>
+      <span class="htitle-accent">napolitaine</span>
+    </h1>
+    <p class="hsub">Pâte fermentée 48h, tomates San Marzano DOP, mozzarella di bufala — cuite 90 secondes au cœur d'un four à bois à 485°C.</p>
+    <div class="hbtns">
+      <a href="#carte" class="btn-p">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        Découvrir la carte
+      </a>
+      <a href="tel:+33561218850" class="btn-g">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.18 6.18l1.28-1.28a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Réserver une table
+      </a>
+    </div>
+  </div>
+  <div class="hscroll">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    Scroll
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="statsbar">
+  <div class="statsbar-inner">
+    <div class="stat-item reveal">
+      <span class="stat-val">485°C</span>
+      <span class="stat-lbl">Température du four à bois</span>
+    </div>
+    <div class="stat-item reveal d1">
+      <span class="stat-val">48h</span>
+      <span class="stat-lbl">Fermentation de la pâte</span>
+    </div>
+    <div class="stat-item reveal d2">
+      <span class="stat-val">4,3/5</span>
+      <span class="stat-lbl">Note Google · 198 avis</span>
+    </div>
+    <div class="stat-item reveal d3">
+      <span class="stat-val">15 ans</span>
+      <span class="stat-lbl">De passion napolitaine</span>
+    </div>
+  </div>
+</div>
+
+<!-- L'EXPÉRIENCE -->
+<section id="exp" class="sp">
+  <div class="exp-inner">
+    <div class="reveal" style="max-width:600px;margin-bottom:64px">
+      <div class="slbl">L'art de la pizza</div>
+      <h2 class="stitle">De la pâte<br>à l'assiette</h2>
+      <p class="ssub">Chaque pizza est le résultat d'un processus rigoureux, hérité de la tradition napolitaine. Voici notre voyage.</p>
+    </div>
+    <div class="jscroll reveal d1">
+      <div class="jtrack" id="jtrack">
+
+        <div class="jcard" data-tilt>
+          <div class="jnum">01</div>
+          <div class="jicon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          <div class="jtitle">La Farine</div>
+          <p class="jdesc">Farine tipo "00" de blé tendre moulue sur pierre, importée du Molino Caputo à Naples. La base de toute pizza authentique.</p>
+          <span class="jtag">Tipo 00 · Naples</span>
+        </div>
+
+        <div class="jcard" data-tilt>
+          <div class="jnum">02</div>
+          <div class="jicon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          </div>
+          <div class="jtitle">La Pâte</div>
+          <p class="jdesc">Levain naturel, eau de source, sel de mer. 48h de fermentation lente à température contrôlée pour une pâte légère et alvéolée.</p>
+          <span class="jtag">48h · Fermentation lente</span>
+        </div>
+
+        <div class="jcard" data-tilt>
+          <div class="jnum">03</div>
+          <div class="jicon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          </div>
+          <div class="jtitle">Les Ingrédients</div>
+          <p class="jdesc">Tomates San Marzano DOP, mozzarella di bufala livrée deux fois par semaine de Campanie. Basilic frais cueilli chaque matin.</p>
+          <span class="jtag">San Marzano DOP · Bufala</span>
+        </div>
+
+        <div class="jcard" data-tilt>
+          <div class="jnum">04</div>
+          <div class="jicon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg>
+          </div>
+          <div class="jtitle">Le Four</div>
+          <p class="jdesc">Four à bois construit artisanalement à Napoli. Chauffé au bois de hêtre et frêne, il atteint 485°C pour une cuisson parfaite en 90 secondes.</p>
+          <span class="jtag">485°C · Bois de hêtre</span>
+        </div>
+
+        <div class="jcard" data-tilt>
+          <div class="jnum">05</div>
+          <div class="jicon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="jtitle">La Dégustation</div>
+          <p class="jdesc">Servie à l'instant de sa sortie du four, pliée en 4 ou à plat. Une explosion de saveurs — l'aboutissement de 15 ans de passion.</p>
+          <span class="jtag">À déguster immédiatement</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LA CARTE -->
+<section id="carte" class="sp">
+  <div style="max-width:1400px;margin:0 auto">
+    <div class="reveal" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:24px;margin-bottom:52px">
+      <div>
+        <div class="slbl">Notre menu</div>
+        <h2 class="stitle">La Carte</h2>
+        <p class="ssub">Cuisson au feu de bois · Ingrédients DOP · Pâte sans gluten +2€</p>
+      </div>
+      <a href="menu.html" class="btn-g reveal d2" style="flex-shrink:0">
+        Menu complet
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+    </div>
+
+    <div class="mtabs reveal d1">
+      <button class="mtab ac" onclick="filterMenu(this,'pizzas')">Pizzas</button>
+      <button class="mtab" onclick="filterMenu(this,'bianche')">Bianche</button>
+      <button class="mtab" onclick="filterMenu(this,'pates')">Pasta</button>
+      <button class="mtab" onclick="filterMenu(this,'antipasti')">Antipasti</button>
+      <button class="mtab" onclick="filterMenu(this,'desserts')">Dolci</button>
+    </div>
+
+    <div class="mgrid" id="mgrid">
+
+      <!-- PIZZAS -->
+      <div class="mcard" data-cat="pizzas" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&q=80" alt="Margherita" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-star">Signature</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Margherita</span><span class="mcard-price">13 €</span></div>
+          <p class="mcard-desc">Tomate San Marzano, mozzarella di bufala DOP, basilic frais, huile d'olive extra vierge</p>
+        </div>
+      </div>
+
+      <div class="mcard" data-cat="pizzas" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&q=80" alt="Diavola" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-hot">Piquante</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Diavola</span><span class="mcard-price">15 €</span></div>
+          <p class="mcard-desc">Tomate, fior di latte, salami piccante de Calabre, piment, basilic, huile piquante</p>
+        </div>
+      </div>
+
+      <div class="mcard" data-cat="pizzas" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=600&q=80" alt="Prosciutto e Rucola" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-star">Best-seller</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Prosciutto e Rucola</span><span class="mcard-price">17 €</span></div>
+          <p class="mcard-desc">Tomate, fior di latte, San Daniele 24 mois, roquette, parmesan, huile de truffe</p>
+        </div>
+      </div>
+
+      <div class="mcard" data-cat="pizzas" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&q=80" alt="Napolitana" loading="lazy">
+          <div class="mcard-img-ov"></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Napolitana</span><span class="mcard-price">14 €</span></div>
+          <p class="mcard-desc">Tomate San Marzano, anchois de Cetara, câpres, olives noires Gaeta, origan</p>
+        </div>
+      </div>
+
+      <div class="mcard" data-cat="pizzas" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=600&q=80" alt="Funghi e Tartufo" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-new">Premium</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Funghi e Tartufo</span><span class="mcard-price">18 €</span></div>
+          <p class="mcard-desc">Crème de truffe noire, fior di latte, porcini, parmesan, huile de truffe blanche</p>
+        </div>
+      </div>
+
+      <div class="mcard" data-cat="pizzas" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80" alt="Quattro Stagioni" loading="lazy">
+          <div class="mcard-img-ov"></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Quattro Stagioni</span><span class="mcard-price">16 €</span></div>
+          <p class="mcard-desc">Tomate, fior di latte, jambon, champignons, artichaut, olives, œuf de ferme</p>
+        </div>
+      </div>
+
+      <!-- BIANCHE -->
+      <div class="mcard h" data-cat="bianche" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=600&q=80" alt="Quattro Formaggi" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-star">Signature</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Quattro Formaggi</span><span class="mcard-price">16 €</span></div>
+          <p class="mcard-desc">Fior di latte, gorgonzola, pecorino romano, ricotta di bufala, noix, miel de truffe</p>
+        </div>
+      </div>
+
+      <div class="mcard h" data-cat="bianche" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80" alt="Patate e Rosmarino" loading="lazy">
+          <div class="mcard-img-ov"></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Patate e Rosmarino</span><span class="mcard-price">15 €</span></div>
+          <p class="mcard-desc">Fior di latte, pommes de terre rôties, romarin, ail confit, parmesan, lard fumé</p>
+        </div>
+      </div>
+
+      <div class="mcard h" data-cat="bianche" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&q=80" alt="Zucchine e Menta" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-vege">Végé</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Zucchine e Menta</span><span class="mcard-price">14 €</span></div>
+          <p class="mcard-desc">Crème de courgettes, fior di latte, courgettes grillées, menthe fraîche, pistaches, citron</p>
+        </div>
+      </div>
+
+      <!-- PÂTES -->
+      <div class="mcard h" data-cat="pates" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1612874742237-6526221588e3?w=600&q=80" alt="Carbonara" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-star">Best-seller</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Carbonara Romana</span><span class="mcard-price">15 €</span></div>
+          <p class="mcard-desc">Spaghetti frais, guanciale de Lazio, jaunes d'œuf bio, pecorino romano, poivre noir</p>
+        </div>
+      </div>
+
+      <div class="mcard h" data-cat="pates" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=600&q=80" alt="Cacio e Pepe" loading="lazy">
+          <div class="mcard-img-ov"></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Cacio e Pepe</span><span class="mcard-price">14 €</span></div>
+          <p class="mcard-desc">Rigatoni, pecorino romano affiné 18 mois, poivre noir de Sarawak, huile d'olive</p>
+        </div>
+      </div>
+
+      <div class="mcard h" data-cat="pates" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=600&q=80" alt="Vongole" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-new">Mer</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Vongole</span><span class="mcard-price">18 €</span></div>
+          <p class="mcard-desc">Linguine frais, palourdes fraîches, vin blanc sec, ail, persil plat, piment</p>
+        </div>
+      </div>
+
+      <!-- ANTIPASTI -->
+      <div class="mcard h" data-cat="antipasti" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1541014741259-de529411b96a?w=600&q=80" alt="Burrata" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-star">Incontournable</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Burrata e Pomodorini</span><span class="mcard-price">12 €</span></div>
+          <p class="mcard-desc">Burrata des Pouilles, tomates cerises confites, pesto maison, fleur de sel, bruschetta</p>
+        </div>
+      </div>
+
+      <div class="mcard h" data-cat="antipasti" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80" alt="Antipasto della Casa" loading="lazy">
+          <div class="mcard-img-ov"></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Antipasto della Casa</span><span class="mcard-price">19 €</span></div>
+          <p class="mcard-desc">Charcuteries, fromages affinés, olives marinées, bruschetta, légumes grillés — pour 2</p>
+        </div>
+      </div>
+
+      <div class="mcard h" data-cat="antipasti" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=80" alt="Carpaccio" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-new">Premium</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Carpaccio di Manzo</span><span class="mcard-price">14 €</span></div>
+          <p class="mcard-desc">Bœuf charolais, parmesan, câpres, roquette, citron de Sicile, huile de truffe</p>
+        </div>
+      </div>
+
+      <!-- DESSERTS -->
+      <div class="mcard h" data-cat="desserts" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&q=80" alt="Tiramisu" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-star">Classique</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Tiramisù della Nonna</span><span class="mcard-price">8 €</span></div>
+          <p class="mcard-desc">Recette originale — mascarpone, savoiardi, café napolitain, cacao de Modica</p>
+        </div>
+      </div>
+
+      <div class="mcard h" data-cat="desserts" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1488900128323-21503983a07e?w=600&q=80" alt="Panna Cotta" loading="lazy">
+          <div class="mcard-img-ov"></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Panna Cotta Vanille</span><span class="mcard-price">7 €</span></div>
+          <p class="mcard-desc">Vanille de Madagascar, coulis de fruits rouges, pistaches de Sicile concassées</p>
+        </div>
+      </div>
+
+      <div class="mcard h" data-cat="desserts" data-tilt>
+        <div class="mcard-img">
+          <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=80" alt="Cannoli" loading="lazy">
+          <div class="mcard-img-ov"></div>
+          <div class="mbadges"><span class="mbadge mb-new">Sicile</span></div>
+        </div>
+        <div class="mcard-body">
+          <div class="mcard-header"><span class="mcard-name">Cannoli Siciliani</span><span class="mcard-price">8 €</span></div>
+          <p class="mcard-desc">2 cannoli croustillants, ricotta sucrée, pistaches, zeste d'orange confite</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- L'ATMOSPHÈRE -->
+<section id="atm" class="sp">
+  <div class="atm-inner">
+    <div class="reveal" style="max-width:600px;margin-bottom:60px">
+      <div class="slbl">La Pizzeria</div>
+      <h2 class="stitle">L'Atmosphère</h2>
+      <p class="ssub">Un écrin chaleureux au cœur de Toulouse, où chaque détail respire Naples.</p>
+    </div>
+    <div class="bgrid reveal d1">
+      <div class="bi bi1">
+        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=900&q=80" alt="Salle principale" loading="lazy">
+        <div class="biov"><span class="bicap">La salle principale</span></div>
+      </div>
+      <div class="bi bi2">
+        <img src="https://images.unsplash.com/photo-1520201163981-8cc95007dd2a?w=600&q=80" alt="Four à bois" loading="lazy">
+        <div class="biov"><span class="bicap">Le four à bois</span></div>
+      </div>
+      <div class="bi bi3">
+        <img src="https://images.unsplash.com/photo-1506354666786-959d6d497f1a?w=500&q=80" alt="Pizzaiolo" loading="lazy">
+        <div class="biov"><span class="bicap">Marco, pizzaiolo</span></div>
+      </div>
+      <div class="bi bi4">
+        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500&q=80" alt="Table dressée" loading="lazy">
+        <div class="biov"><span class="bicap">Un soir en salle</span></div>
+      </div>
+      <div class="bi bi5">
+        <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=500&q=80" alt="Pizza" loading="lazy">
+        <div class="biov"><span class="bicap">La Margherita</span></div>
+      </div>
+    </div>
+    <a href="https://instagram.com/pizzanapolitana_tlse" target="_blank" rel="noopener" class="ig-cta reveal d2">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+      @pizzanapolitana_tlse · 670 abonnés
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- AVIS -->
+<section id="avis" class="sp" style="background:var(--bg2);border-top:1px solid rgba(255,255,255,.06)">
+  <div style="max-width:1400px;margin:0 auto">
+    <div class="reveal">
+      <div class="slbl">Ils en parlent</div>
+      <h2 class="stitle">198 raisons de nous rendre visite</h2>
+    </div>
+    <div class="rh reveal d1">
+      <div class="rscore">4,3</div>
+      <div class="rdet">
+        <div class="rstars">
+          <svg class="rstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <svg class="rstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <svg class="rstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <svg class="rstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <svg class="rstar" viewBox="0 0 24 24" fill="rgba(212,168,83,.3)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="rcount">198 avis Google vérifiés</div>
+        <div class="rsrc">Google Maps · Toulouse, France</div>
+        <div class="rbars">
+          <div class="rbar"><span class="rlbl">5</span><div class="rtrack"><div class="rfill" style="width:68%"></div></div></div>
+          <div class="rbar"><span class="rlbl">4</span><div class="rtrack"><div class="rfill" style="width:22%"></div></div></div>
+          <div class="rbar"><span class="rlbl">3</span><div class="rtrack"><div class="rfill" style="width:6%"></div></div></div>
+          <div class="rbar"><span class="rlbl">2</span><div class="rtrack"><div class="rfill" style="width:2%;background:rgba(255,69,0,.6)"></div></div></div>
+          <div class="rbar"><span class="rlbl">1</span><div class="rtrack"><div class="rfill" style="width:2%;background:rgba(255,69,0,.6)"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cvp reveal d2">
+      <div class="ctrack" id="ctrack">
+
+        <div class="rcard ft">
+          <div class="rcstars">
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <p class="rctext">"La meilleure Margherita que j'ai mangée en dehors de Naples. La pâte est parfaite — légère, alvéolée, avec ce goût légèrement fumé du four à bois. Marco est un vrai artisan, on revient chaque semaine sans hésiter !"</p>
+          <div class="rcaut">
+            <div class="rcav">S</div>
+            <div><div class="rcname">Sophie M.</div><div class="rcdate">il y a 2 semaines</div></div>
+          </div>
+        </div>
+
+        <div class="rcard">
+          <div class="rcstars">
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <p class="rctext">"Cadre chaleureux, accueil formidable. La Diavola est à tomber — juste ce qu'il faut de piquant. Les ingrédients italiens font toute la différence. Réservez absolument, la salle se remplit très vite !"</p>
+          <div class="rcaut">
+            <div class="rcav">A</div>
+            <div><div class="rcname">Antoine L.</div><div class="rcdate">il y a 1 mois</div></div>
+          </div>
+        </div>
+
+        <div class="rcard">
+          <div class="rcstars">
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="rgba(212,168,83,.3)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <p class="rctext">"Très belle adresse pour un dîner en amoureux. Le Prosciutto e Rucola est excellent, la burrata en entrée était crémeuse à souhait. Un vrai dépaysement au cœur de Toulouse."</p>
+          <div class="rcaut">
+            <div class="rcav">C</div>
+            <div><div class="rcname">Claire D.</div><div class="rcdate">il y a 3 semaines</div></div>
+          </div>
+        </div>
+
+        <div class="rcard">
+          <div class="rcstars">
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg class="rcstar" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <p class="rctext">"On y mange de la vraie pizza napolitaine — pas une imitation. La pâte est d'une légèreté remarquable, les ingrédients sont d'une fraîcheur irréprochable. Marco connaît son métier à la perfection."</p>
+          <div class="rcaut">
+            <div class="rcav">J</div>
+            <div><div class="rcname">Julien R.</div><div class="rcdate">il y a 2 mois</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="ccontrols reveal d3">
+      <button class="cbtn" id="cprev" aria-label="Précédent">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="cbtn" id="cnext" aria-label="Suivant">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="cdots" id="cdots">
+        <div class="cdot ac"></div>
+        <div class="cdot"></div>
+        <div class="cdot"></div>
+        <div class="cdot"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="sp">
+  <div class="ct-inner">
+    <div class="reveal" style="max-width:600px;margin-bottom:60px">
+      <div class="slbl">Nous trouver</div>
+      <h2 class="stitle">Réservez votre table</h2>
+      <p class="ssub">Nous vous accueillons du mardi au dimanche. La réservation est fortement conseillée.</p>
+    </div>
+    <div class="ct-grid">
+      <div>
+        <div class="ctitem reveal">
+          <div class="cticon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div>
+            <div class="ctlbl">Adresse</div>
+            <div class="ctval">7 Rue Saint-Rome</div>
+            <div class="ctsub">31000 Toulouse, France</div>
+          </div>
+        </div>
+        <div class="ctitem reveal d1">
+          <div class="cticon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.18 6.18l1.28-1.28a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+          <div>
+            <div class="ctlbl">Téléphone</div>
+            <a href="tel:+33561218850" class="ctval" style="color:var(--warm)">05 61 21 88 50</a>
+            <div class="ctsub">Réservations & informations</div>
+          </div>
+        </div>
+        <div class="ctitem reveal d2">
+          <div class="cticon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div>
+            <div class="ctlbl">Horaires</div>
+            <div class="ctval">Mar – Dim · 12h–14h30 · 19h–23h</div>
+            <div class="ctsub" style="color:rgba(255,69,0,.7)">Fermé le lundi</div>
+          </div>
+        </div>
+        <div class="ctitem reveal d3">
+          <div class="cticon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div>
+            <div class="ctlbl">Accès</div>
+            <div class="ctval">Métro A — Capitole (5 min)</div>
+            <div class="ctsub">Bus lignes 12, 38 · Parking Wilson</div>
+          </div>
+        </div>
+        <a href="tel:+33561218850" class="ctcta reveal d4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.18 6.18l1.28-1.28a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Appeler pour réserver
+        </a>
+      </div>
+      <div class="reveal d2">
+        <div class="ctmap">
+          <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=1.4380%2C43.5980%2C1.4480%2C43.6040&layer=mapnik&marker=43.6010%2C1.4430" allowfullscreen loading="lazy" title="Localisation Pizzeria Napolitana"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-sep"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fg">
+    <div>
+      <div class="nlogo">
+        <div class="nlogo-i" style="flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        </div>
+        <div>
+          <div class="nlogo-t">Pizzeria Napolitana</div>
+          <div class="nlogo-s">Toulouse · Depuis 2009</div>
+        </div>
+      </div>
+      <p class="fbrand-tag">L'authenticité de Naples au cœur de Toulouse. Fait avec amour, cuit au feu de bois, servi avec passion.</p>
+    </div>
+    <div>
+      <div class="fct">Navigation</div>
+      <div class="flinks">
+        <a href="#exp">L'Expérience</a>
+        <a href="#carte">La Carte</a>
+        <a href="menu.html">Menu complet</a>
+        <a href="#atm">Galerie</a>
+        <a href="#avis">Avis clients</a>
+      </div>
+    </div>
+    <div>
+      <div class="fct">Contact</div>
+      <div class="flinks">
+        <a href="tel:+33561218850">05 61 21 88 50</a>
+        <a>7 Rue Saint-Rome</a>
+        <a>31000 Toulouse</a>
+        <a href="https://instagram.com/pizzanapolitana_tlse" target="_blank" rel="noopener">@pizzanapolitana_tlse</a>
+      </div>
+    </div>
+    <div>
+      <div class="fct">Horaires</div>
+      <div class="flinks">
+        <a style="color:rgba(255,69,0,.6)">Lundi — Fermé</a>
+        <a>Mar – Dim : 12h00–14h30</a>
+        <a>Mar – Dim : 19h00–23h00</a>
+      </div>
+    </div>
+  </div>
+  <div class="fbtm">
+    <span>© 2024 Pizzeria Napolitana · Tous droits réservés</span>
+    <span>Fait avec passion à Toulouse · Site réalisé par <span class="fbtm-brand">Octo Vision Digital</span></span>
+  </div>
+</footer>
+
+<script>
+// ── CURSOR
+const cur = document.getElementById('cur');
+const curR = document.getElementById('cur-r');
+let mx=0,my=0,rx=0,ry=0;
+if(window.matchMedia('(pointer:fine)').matches){
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+  (function tick(){
+    rx+=(mx-rx)*.11; ry+=(my-ry)*.11;
+    cur.style.left=mx+'px'; cur.style.top=my+'px';
+    curR.style.left=rx+'px'; curR.style.top=ry+'px';
+    requestAnimationFrame(tick);
+  })();
+  document.querySelectorAll('a,button,.mtab,.cbtn,.cdot,.bi,.mcard,.jcard').forEach(el=>{
+    el.addEventListener('mouseenter',()=>document.body.classList.add('ch'));
+    el.addEventListener('mouseleave',()=>document.body.classList.remove('ch'));
+  });
+}
+
+// ── NAVBAR SCROLL
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>nav.classList.toggle('s',window.scrollY>60),{passive:true});
+
+// ── MOBILE MENU
+function toggleMenu(){
+  document.getElementById('mmenu').classList.toggle('open');
+  document.body.style.overflow=document.getElementById('mmenu').classList.contains('open')?'hidden':'';
+}
+
+// ── EMBER PARTICLES
+const canvas=document.getElementById('pc');
+const ctx=canvas.getContext('2d');
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
+resize();
+window.addEventListener('resize',resize,{passive:true});
+class E{
+  constructor(){this.r()}
+  r(){
+    this.x=Math.random()*canvas.width;
+    this.y=canvas.height+8;
+    this.sz=Math.random()*2.5+.8;
+    this.vy=Math.random()*1.4+.5;
+    this.vx=(Math.random()-.5)*.7;
+    this.life=0;
+    this.maxL=Math.random()*180+80;
+    this.hue=Math.random()*25;
+    if(Math.random()<.3){this.y=Math.random()*canvas.height;this.life=Math.random()*this.maxL}
+  }
+  update(){this.x+=this.vx;this.y-=this.vy;this.life++;if(this.life>=this.maxL||this.y<-8)this.r()}
+  draw(){
+    const op=(1-this.life/this.maxL)*.75;
+    ctx.save();ctx.beginPath();
+    ctx.arc(this.x,this.y,this.sz,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${18+this.hue},100%,62%,${op})`;
+    ctx.shadowBlur=8;ctx.shadowColor=`hsla(${18+this.hue},100%,60%,.5)`;
+    ctx.fill();ctx.restore();
+  }
+}
+const embers=Array.from({length:window.innerWidth<768?30:55},()=>new E());
+if(!window.matchMedia('(prefers-reduced-motion:reduce)').matches){
+  (function frame(){ctx.clearRect(0,0,canvas.width,canvas.height);embers.forEach(e=>{e.update();e.draw()});requestAnimationFrame(frame)})();
+}
+
+// ── INTERSECTION OBSERVER
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('v')});
+},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// ── 3D TILT (desktop only)
+if(window.matchMedia('(pointer:fine)').matches && window.innerWidth>=768){
+  document.querySelectorAll('[data-tilt]').forEach(card=>{
+    card.addEventListener('mousemove',e=>{
+      const r=card.getBoundingClientRect();
+      const x=e.clientX-r.left,y=e.clientY-r.top;
+      const cx=r.width/2,cy=r.height/2;
+      const ry=((x-cx)/cx)*9,rx=-((y-cy)/cy)*7;
+      card.style.transform=`perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(8px)`;
+      card.style.transition='transform .05s';
+    });
+    card.addEventListener('mouseleave',()=>{
+      card.style.transform='';
+      card.style.transition='transform .5s cubic-bezier(.4,0,.2,1)';
+    });
+  });
+}
+
+// ── MENU FILTER
+function filterMenu(btn,cat){
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('ac'));
+  btn.classList.add('ac');
+  const cards=document.querySelectorAll('.mcard');
+  cards.forEach((c,i)=>{
+    const show=c.dataset.cat===cat;
+    c.classList.toggle('h',!show);
+    if(show){c.style.animationDelay=(i%6)*.07+'s';c.style.animation='none';void c.offsetWidth;c.style.animation='card-in .45s cubic-bezier(.4,0,.2,1) both'}
+  });
+}
+// Init
+document.querySelectorAll('.mcard').forEach(c=>{if(c.dataset.cat!=='pizzas')c.classList.add('h')});
+
+// ── CAROUSEL
+const ctrack=document.getElementById('ctrack');
+const dots=document.querySelectorAll('.cdot');
+let ci=0;
+const cardW=()=>window.innerWidth<640?290+20:360+20;
+function goTo(i){
+  const max=ctrack.children.length-1;
+  ci=Math.max(0,Math.min(i,max));
+  ctrack.style.transform=`translateX(-${ci*cardW()}px)`;
+  dots.forEach((d,j)=>{d.classList.toggle('ac',j===ci)});
+  document.querySelectorAll('.rcard').forEach((c,j)=>c.classList.toggle('ft',j===ci));
+}
+document.getElementById('cprev').addEventListener('click',()=>goTo(ci-1));
+document.getElementById('cnext').addEventListener('click',()=>goTo(ci+1));
+dots.forEach((d,i)=>d.addEventListener('click',()=>goTo(i)));
+let auto=setInterval(()=>goTo((ci+1)%ctrack.children.length),4200);
+const cvp=document.querySelector('.cvp');
+cvp.addEventListener('mouseenter',()=>clearInterval(auto));
+cvp.addEventListener('mouseleave',()=>{auto=setInterval(()=>goTo((ci+1)%ctrack.children.length),4200)});
+
+// ── JOURNEY DRAG SCROLL
+const js=document.querySelector('.jscroll');
+let isDown=false,startX,scrollLeft;
+js.addEventListener('mousedown',e=>{isDown=true;startX=e.pageX-js.offsetLeft;scrollLeft=js.scrollLeft});
+js.addEventListener('mouseleave',()=>isDown=false);
+js.addEventListener('mouseup',()=>isDown=false);
+js.addEventListener('mousemove',e=>{if(!isDown)return;e.preventDefault();const x=e.pageX-js.offsetLeft;js.scrollLeft=scrollLeft-(x-startX)*1.5});
+</script>
+</body>
+</html>
